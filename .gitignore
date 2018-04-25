@@ -1,0 +1,15 @@
+# Gradle
+gradle
+.gradle
+gradlew.bat
+
+# Build files
+build
+out
+
+# Log files
+*.log
+
+# Idea files
+.idea
+*.iml
