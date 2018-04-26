@@ -1,11 +1,7 @@
 package core;
 
-import akka.actor.AbstractActor;
-import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import messages.CreateTableMsg;
 import messages.InsertMsg;
 import messages.InsertRowMsg;
@@ -16,6 +12,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Master extends AbstractDBActor {
+
+    public static final String ACTOR_NAME = "master";
+
     private Map<String, ActorRef> tables;
 
     private Master() {

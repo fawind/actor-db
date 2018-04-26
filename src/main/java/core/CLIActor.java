@@ -1,13 +1,13 @@
 package core;
 
-import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import messages.QueryErrorMsg;
 import messages.QuerySuccessMsg;
 
 public class CLIActor extends AbstractDBActor {
+
+    public static final String ACTOR_NAME = "cli";
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()

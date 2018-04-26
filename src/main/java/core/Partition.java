@@ -1,12 +1,7 @@
 package core;
 
-import akka.actor.AbstractActor;
-import akka.actor.AbstractLoggingActor;
 import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import messages.InsertRowMsg;
-import messages.QuerySuccessMsg;
 import messages.SuccessMsg;
 
 import java.util.ArrayList;
