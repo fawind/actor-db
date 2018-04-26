@@ -23,7 +23,7 @@ public class CLI {
     }
 
     public void run() {
-        try (Datastore datastore = DatastoreModule.createDatastoreInstance()) {
+        try (Datastore datastore = DatastoreModule.createInstance()) {
             datastore.start();
             readLines(datastore);
         } catch (Exception e) {

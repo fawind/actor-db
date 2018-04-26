@@ -7,7 +7,7 @@ import core.Datastore;
 
 public class DatastoreModule extends AbstractModule {
 
-    public static Datastore createDatastoreInstance() {
+    public static Datastore createInstance() {
         Injector injector = Guice.createInjector(new DatastoreModule());
         return injector.getInstance(Datastore.class);
     }
