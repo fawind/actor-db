@@ -1,7 +1,10 @@
-package com.github.fawind.hakkandb.core;
+package core;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import messages.CreateTableMsg;
+import messages.InsertMsg;
+import messages.InsertRowMsg;
 
 public class CLI {
 
@@ -16,7 +19,9 @@ public class CLI {
     }
 
     private void start() throws InterruptedException {
-        master.tell(new Master.CreateTableMsg("foo", "int,int,string"), cliActor);
+        master.tell(new CreateTableMsg("foo", "int,int,string"), cliActor);
+        master.tell(new InsertMsg("foo", new Row("1", "abc", "23")), cliActor);
+        master.tell(new InsertMsg("foo", new Row("2", "bcd", "34")), cliActor);
 
         Thread.sleep(1000);
         actorSystem.terminate();
