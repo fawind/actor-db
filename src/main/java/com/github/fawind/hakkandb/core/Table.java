@@ -12,11 +12,11 @@ public class Table extends AbstractActor {
 
     @Override
     public Receive createReceive() {
-        return null;
+        return receiveBuilder().build();
     }
 
     static Props props(String tableName, String layout) {
-        return Props.create(Table.class, tableName, layout);
+        return Props.create(Table.class, () -> new Table(tableName, layout));
     }
 
     private Table(String name, String layout) {

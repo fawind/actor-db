@@ -1,6 +1,7 @@
 package com.github.fawind.hakkandb.core;
 
 import akka.actor.AbstractActor;
+import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 
@@ -11,14 +12,13 @@ public class Master extends AbstractActor {
 
     private Map<String, ActorRef> tables;
 
-    public Master() {
+    private Master() {
         this.tables = new HashMap<>();
     }
 
-    public static Props props() {
+    static Props props() {
         return Props.create(Master.class, Master::new);
     }
-
 
     @Override
     public Receive createReceive() {
@@ -30,8 +30,11 @@ public class Master extends AbstractActor {
 
     private void handleCreateTableMsg(CreateTableMsg createTableMsg) {
         // find out how to do layout
-        tables.put(createTableMsg.name, this.getContext().actorOf(Table.props(createTableMsg.name, createTableMsg.layout)));
-        getSender().tell("good", getSelf());
+        String actorName = createTableMsg.name + "-actor";
+        ActorRef table = getContext().actorOf(Table.props(createTableMsg.name, createTableMsg.layout), actorName);
+        tables.put(createTableMsg.name, table);
+        System.out.println("createTableMsg = [" + createTableMsg.name + ": " + createTableMsg.layout + "]");
+        getSender().tell(new QuerySuccessMsg(), getSelf());
     }
 
     private void handleSelectAllMsg(SelectAllMsg selectAllMsg) {
@@ -51,11 +54,11 @@ public class Master extends AbstractActor {
     // =================================
     //            Messages
     // =================================
-    public static final class CreateTableMsg {
+    static final class CreateTableMsg {
         String name;
         String layout;
 
-        public CreateTableMsg(String name, String layout) {
+        CreateTableMsg(String name, String layout) {
             this.name = name;
             this.layout = layout;
         }
@@ -70,4 +73,15 @@ public class Master extends AbstractActor {
             this.requester = requester;
         }
     }
+
+    static final class QuerySuccessMsg {}
+
+    static final class QueryErrorMsg {
+        String msg;
+
+        public QueryErrorMsg(String msg) {
+            this.msg = msg;
+        }
+    }
+
 }
