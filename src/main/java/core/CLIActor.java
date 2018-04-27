@@ -2,6 +2,7 @@ package core;
 
 import akka.actor.Props;
 import messages.QueryErrorMsg;
+import messages.QueryResultMsg;
 import messages.QuerySuccessMsg;
 
 public class CLIActor extends AbstractDBActor {
@@ -12,7 +13,8 @@ public class CLIActor extends AbstractDBActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(QuerySuccessMsg.class, msg -> log.info("Query successful"))
-                .match(QueryErrorMsg.class, msg -> log.error("Query error:" + msg.getMsg()))
+                .match(QueryResultMsg.class, msg -> log.info("Query result\n" + msg.getResult()))
+                .match(QueryErrorMsg.class, msg -> log.error("Query error: " + msg.getMsg()))
                 .build();
     }
 

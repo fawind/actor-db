@@ -1,12 +1,14 @@
 package messages;
 
+import akka.actor.ActorRef;
 import core.Row;
 
-public class InsertMsg {
+public class InsertMsg extends TransactionMsg {
     private final String tableName;
     private final Row row;
 
-    public InsertMsg(String tableName, Row row) {
+    public InsertMsg(String tableName, Row row, long transactionId, ActorRef requester) {
+        super(transactionId, requester);
         this.tableName = tableName;
         this.row = row;
     }

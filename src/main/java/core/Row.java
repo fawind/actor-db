@@ -1,5 +1,6 @@
 package core;
 
+import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import lombok.Data;
@@ -39,7 +40,7 @@ public class Row implements Comparable<Row> {
 
     public long getHashKey() {
         // TODO: change back
-        // return hashFunction.hashString(getKey(), Charsets.UTF_8).asLong();
-        return Long.valueOf(getKey());
+         return hashFunction.hashString(getKey(), Charsets.UTF_8).asLong();
+//        return Long.valueOf(getKey());
     }
 }

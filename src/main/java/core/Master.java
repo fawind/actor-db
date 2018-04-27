@@ -5,6 +5,7 @@ import akka.actor.Props;
 import messages.CreateTableMsg;
 import messages.InsertMsg;
 import messages.InsertRowMsg;
+import messages.QueryErrorMsg;
 import messages.QuerySuccessMsg;
 import messages.SelectAllMsg;
 
@@ -34,24 +35,31 @@ public class Master extends AbstractDBActor {
                 .build();
     }
 
-    private void handleInsertMsg(InsertMsg insertMsg) {
-        tables.get(insertMsg.getTableName()).tell(new InsertRowMsg(insertMsg.getRow()), getSelf());
+    private void handleInsertMsg(InsertMsg msg) {
+        tables.get(msg.getTableName()).tell(new InsertRowMsg(msg.getRow()), getSelf());
     }
 
-    private void handleCreateTableMsg(CreateTableMsg createTableMsg) {
-        log.info("createTableMsg = [" + createTableMsg.getName()+ ": " + createTableMsg.getLayout() + "]");
+    private void handleCreateTableMsg(CreateTableMsg msg) {
+        log.info("createTableMsg = [" + msg.getName()+ ": " + msg.getLayout() + "]");
 
-        String actorName = createTableMsg.getName() + "-actor";
-        ActorRef table = getContext().actorOf(Table.props(createTableMsg.getName(), createTableMsg.getLayout(), getSelf()), actorName);
+        String tableName = msg.getName();
+
+        if (tables.containsKey(tableName)) {
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists."), getSelf());
+            return;
+        }
+
+        String actorName = "table-actor_" + tableName;
+        ActorRef table = getContext().actorOf(Table.props(msg.getName(), msg.getLayout(), getSelf()), actorName);
 
         log.info("Created actor: " + actorName);
 
-        tables.put(createTableMsg.getName(), table);
+        tables.put(msg.getName(), table);
         getSender().tell(new QuerySuccessMsg(), getSelf());
     }
 
-    private void handleSelectAllMsg(SelectAllMsg selectAllMsg) {
-        tables.get(selectAllMsg.getTableName()).tell("selectAllMsg", getSender());
+    private void handleSelectAllMsg(SelectAllMsg msg) {
+        tables.get(msg.getTableName()).tell(msg, getSender());
     }
 
 

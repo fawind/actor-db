@@ -2,8 +2,13 @@ package core;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import messages.CreateTableMsg;
 import messages.InsertMsg;
+import messages.SelectAllMsg;
+import messages.SelectWhereMsg;
+
+import java.util.function.Predicate;
 
 public class Datastore implements AutoCloseable {
 
@@ -11,20 +16,33 @@ public class Datastore implements AutoCloseable {
 
     private ActorSystem actorSystem;
     private ActorRef master;
-    private ActorRef cliActor;
+    private ActorRef clientActor;
 
-    public void start() {
+    public ActorRef start() {
+        return startWithCustomClientActor(CLIActor.props(), CLIActor.ACTOR_NAME);
+    }
+
+    public ActorRef startWithCustomClientActor(Props props, String name) {
         actorSystem = ActorSystem.create(SYSTEM_NAME);
         master = actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
-        cliActor = actorSystem.actorOf(CLIActor.props(), CLIActor.ACTOR_NAME);
+        clientActor = actorSystem.actorOf(props, name);
+        return clientActor;
     }
 
     public void createTable(String tableName, String schema) {
-        master.tell(new CreateTableMsg(tableName, schema), cliActor);
+        master.tell(new CreateTableMsg(tableName, schema, 0, clientActor), clientActor);
     }
 
     public void insertInto(String tableName, Row row) {
-        master.tell(new InsertMsg(tableName, row), cliActor);
+        master.tell(new InsertMsg(tableName, row, 0, clientActor), clientActor);
+    }
+
+    public void selectAllFrom(String tableName) {
+        master.tell(new SelectAllMsg(tableName, 0, clientActor), clientActor);
+    }
+
+    public void selectFromWhere(String tableName, Predicate<Row> whereFn) {
+        master.tell(new SelectWhereMsg(tableName, whereFn, 0, clientActor), clientActor);
     }
 
     @Override
