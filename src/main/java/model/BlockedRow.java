@@ -1,6 +1,10 @@
-package core;
+package model;
 
+import lombok.Data;
+
+@Data
 public class BlockedRow {
+
     private final Row row;
     private final Transaction transaction;
 

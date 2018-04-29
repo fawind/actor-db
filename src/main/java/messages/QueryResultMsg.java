@@ -1,11 +1,12 @@
 package messages;
 
-import core.Row;
-import core.Transaction;
+import model.Row;
+import model.Transaction;
 
 import java.util.List;
 
 public class QueryResultMsg extends TransactionMsg {
+
     private final List<Row> result;
 
     public QueryResultMsg(List<Row> result, Transaction transaction) {

@@ -1,8 +1,9 @@
 package messages;
 
-import core.BlockedRow;
+import model.BlockedRow;
 
 public class PartitionBlockedMsg {
+
     private final BlockedRow blockedRow;
 
     public PartitionBlockedMsg(BlockedRow blockedRow) {

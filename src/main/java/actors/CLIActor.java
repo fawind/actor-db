@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.Props;
 import messages.QueryErrorMsg;
@@ -9,6 +9,10 @@ public class CLIActor extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "cli";
 
+    public static Props props() {
+        return Props.create(CLIActor.class);
+    }
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
@@ -18,10 +22,4 @@ public class CLIActor extends AbstractDBActor {
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
-
-    public static Props props() {
-        return Props.create(CLIActor.class);
-    }
-
-
 }

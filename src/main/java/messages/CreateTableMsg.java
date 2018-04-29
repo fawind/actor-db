@@ -1,8 +1,9 @@
 package messages;
 
-import core.Transaction;
+import model.Transaction;
 
 public final class CreateTableMsg extends TransactionMsg {
+
     private final String tableName;
     private final String layout;
 

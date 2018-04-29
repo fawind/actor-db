@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -17,6 +17,8 @@ import messages.SelectAllMsg;
 import messages.SelectWhereMsg;
 import messages.SplitPartitionMsg;
 import messages.SplitSuccessMsg;
+import model.BlockedRow;
+import model.Row;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,15 +29,30 @@ import java.util.Map;
 import java.util.Set;
 
 public class Table extends AbstractDBActor {
-    private final String layout;
-    private int highestPartitionId = 1;
 
+    public static Props props(String layout) {
+        return Props.create(Table.class, () -> new Table(layout));
+    }
+
+    private final String layout;
     private final Multimap<ActorRef, BlockedRow> blockedRows;
     private final Map<Long, Set<Integer>> runningTransactions;
     private final Multimap<Long, Row> runningTransactionResults;
+    private final RangeMap<Long, ActorRef> partitions = TreeRangeMap.create();
 
-    private RangeMap<Long, ActorRef> partitions = TreeRangeMap.create();
     private int numPartitions = 0;
+    private int highestPartitionId = 1;
+
+    private Table(String layout) {
+        this.layout = layout;
+
+        blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
+        runningTransactions = new HashMap<>();
+        runningTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
+
+        Range<Long> startRange = Range.closed(Long.MIN_VALUE, Long.MAX_VALUE);
+        createPartition(startRange);
+    }
 
     @Override
     public Receive createReceive() {
@@ -50,21 +67,6 @@ public class Table extends AbstractDBActor {
                 .match(QuerySuccessMsg.class, this::handleQuerySuccess)
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
-    }
-
-    static Props props(String layout) {
-        return Props.create(Table.class, () -> new Table(layout));
-    }
-
-    private Table(String layout) {
-        this.layout = layout;
-
-        blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
-        runningTransactions = new HashMap<>();
-        runningTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
-
-        Range<Long> startRange = Range.closed(Long.MIN_VALUE, Long.MAX_VALUE);
-        createPartition(startRange);
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
@@ -86,7 +88,6 @@ public class Table extends AbstractDBActor {
         long transactionId = msg.getTransactionId();
 
         runningTransactionResults.putAll(transactionId, msg.getResult());
-
         updateTransaction(transactionId, msg.getActorId());
 
         if (isTransactionDone(transactionId)) {
@@ -135,7 +136,6 @@ public class Table extends AbstractDBActor {
             log.error("Cannot update transaction #{}. It is not present in list of transactions", transactionId);
             return;
         }
-
         partitionSet.remove(actorId);
     }
 
@@ -158,9 +158,7 @@ public class Table extends AbstractDBActor {
     }
 
     private <MsgType> void broadcast(MsgType msg) {
-        partitions.asMapOfRanges().forEach(
-                (range, partition) -> partition.tell(msg, getSelf())
-        );
+        partitions.asMapOfRanges().forEach((range, partition) -> partition.tell(msg, getSelf()));
     }
 
     private Set<Integer> createCurrentPartitionSet() {
@@ -168,7 +166,6 @@ public class Table extends AbstractDBActor {
         for (int i = 1; i <= numPartitions; ++i) {
             partitionSet.add(i);
         }
-
         return partitionSet;
     }
 }

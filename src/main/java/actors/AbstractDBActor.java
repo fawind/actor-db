@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.AbstractLoggingActor;
 import akka.event.Logging;

@@ -1,5 +1,7 @@
 package core;
 
+import actors.CLIActor;
+import actors.Master;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -7,13 +9,15 @@ import messages.CreateTableMsg;
 import messages.InsertMsg;
 import messages.SelectAllMsg;
 import messages.SelectWhereMsg;
+import model.Row;
+import model.Transaction;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class Datastore implements AutoCloseable {
 
-    public static final String SYSTEM_NAME = "actor-db";
+    public static final String SYSTEM_NAME = "actors-db";
 
     private ActorSystem actorSystem;
     private ActorRef master;
@@ -51,7 +55,7 @@ public class Datastore implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         actorSystem.terminate();
     }
 

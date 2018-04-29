@@ -1,8 +1,9 @@
 package messages;
 
-import core.Transaction;
+import model.Transaction;
 
 public final class SelectAllMsg extends TransactionMsg {
+
     private final String tableName;
 
     public SelectAllMsg(String tableName, Transaction transaction) {

@@ -1,11 +1,12 @@
 package messages;
 
-import core.Row;
-import core.Transaction;
+import model.Row;
+import model.Transaction;
 
 import java.util.function.Predicate;
 
 public class SelectWhereMsg extends TransactionMsg {
+
     private final String tableName;
     private final Predicate<Row> whereFn;
 

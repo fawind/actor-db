@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -14,6 +14,8 @@ import messages.SelectWhereMsg;
 import messages.SplitInsertMsg;
 import messages.SplitPartitionMsg;
 import messages.SplitSuccessMsg;
+import model.BlockedRow;
+import model.Row;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,12 +24,17 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
+
+    public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
+        return Props.create(Partition.class, () -> new Partition(partitionId, startRange, table));
+    }
+
     private final int partitionId;
+    private final ActorRef table;
+    private final int capacity = 10;
+
     private List<Row> rows;
     private Range<Long> range;
-    private final ActorRef table;
-
-    private final int capacity = 10;
     private boolean isFull = false;
 
     private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
@@ -35,10 +42,6 @@ public class Partition extends AbstractDBActor {
         this.range = startRange;
         this.table = table;
         this.rows = new ArrayList<>(capacity);
-    }
-
-    public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
-        return Props.create(Partition.class, () -> new Partition(partitionId, startRange, table));
     }
 
     @Override
@@ -95,10 +98,8 @@ public class Partition extends AbstractDBActor {
 
     private void handleSplitPartition(SplitPartitionMsg msg) {
         ActorRef other = msg.getNewPartition();
-
         List<Row> rowsToCopy = new ArrayList<>(rows.subList(capacity / 2, capacity));
         other.tell(new SplitInsertMsg(rowsToCopy), getSelf());
-
     }
 
     private void handleSplitInsert(SplitInsertMsg msg) {
@@ -111,7 +112,6 @@ public class Partition extends AbstractDBActor {
         // Only keep first half of rows because the rest were successfully moved to new partition
         rows = new ArrayList<>(rows.subList(0, capacity / 2));
         isFull = false;
-
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
     }
 }

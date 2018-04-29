@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
@@ -19,14 +19,14 @@ public class Master extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "master";
 
-    private Map<String, ActorRef> tables;
+    public static Props props() {
+        return Props.create(Master.class, Master::new);
+    }
+
+    private final Map<String, ActorRef> tables;
 
     private Master() {
         this.tables = new HashMap<>();
-    }
-
-    static Props props() {
-        return Props.create(Master.class, Master::new);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class Master extends AbstractDBActor {
         String actorName = "table-" + tableName;
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
-        log.info("Created actor: " + actorName);
+        log.info("Created actors: " + actorName);
 
         tables.put(msg.getTableName(), table);
         msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
@@ -71,7 +71,6 @@ public class Master extends AbstractDBActor {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
         table.ifPresent(t -> t.tell(msg, msg.getRequester()));
     }
-
 
     private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
         ActorRef table = tables.get(tableName);

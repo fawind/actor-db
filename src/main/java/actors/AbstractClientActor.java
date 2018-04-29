@@ -1,4 +1,4 @@
-package core;
+package actors;
 
 import akka.actor.AbstractActor;
 import messages.QueryErrorMsg;
@@ -17,6 +17,8 @@ public abstract class AbstractClientActor extends AbstractActor {
     }
 
     protected abstract void handleQuerySuccess(QuerySuccessMsg msg);
+
     protected abstract void handleQueryResult(QueryResultMsg msg);
+
     protected abstract void handleQueryError(QueryErrorMsg msg);
 }

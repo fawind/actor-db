@@ -1,11 +1,12 @@
 package messages;
 
-import core.Row;
-import core.Transaction;
+import model.Row;
+import model.Transaction;
 
 import java.util.List;
 
 public class PartialQueryResultMsg extends TransactionMsg {
+
     private final List<Row> result;
     private final int actorId;
 

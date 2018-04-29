@@ -1,10 +1,11 @@
 package messages;
 
-import core.Row;
+import model.Row;
 
 import java.util.List;
 
 public class SplitInsertMsg {
+
     private final List<Row> rows;
 
     public SplitInsertMsg(List<Row> rows) {

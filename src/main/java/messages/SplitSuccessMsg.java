@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import com.google.common.collect.Range;
 
 public class SplitSuccessMsg {
+
     private final ActorRef newPartition;
     private final Range<Long> newRange;
     private final ActorRef oldPartition;

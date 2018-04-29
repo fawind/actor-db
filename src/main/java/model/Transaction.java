@@ -1,8 +1,11 @@
-package core;
+package model;
 
 import akka.actor.ActorRef;
+import lombok.Data;
 
+@Data
 public class Transaction {
+
     private final long transactionId;
     private final ActorRef requester;
 

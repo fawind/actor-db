@@ -1,7 +1,8 @@
+package core;
+
 import com.google.common.base.Splitter;
 import configuration.DatastoreModule;
-import core.Datastore;
-import core.Row;
+import model.Row;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -47,6 +48,9 @@ public class CLI {
     }
 
     private void parseMessage(Datastore datastore, String message) {
+        if (message == null || message.length() == 0) {
+            return;
+        }
         List<String> parts = Splitter.on(" ").omitEmptyStrings().splitToList(message.toLowerCase());
         if (parts.size() == 0) {
             return;

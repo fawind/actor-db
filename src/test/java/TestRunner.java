@@ -1,6 +1,7 @@
 import configuration.DatastoreModule;
+import actors.Datastore;
 import core.Datastore;
-import core.Row;
+import model.Row;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

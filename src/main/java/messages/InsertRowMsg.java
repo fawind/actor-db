@@ -1,9 +1,10 @@
 package messages;
 
-import core.Row;
-import core.Transaction;
+import model.Row;
+import model.Transaction;
 
 public class InsertRowMsg extends TransactionMsg {
+
     private final Row row;
 
     public InsertRowMsg(Row row, Transaction transaction) {
