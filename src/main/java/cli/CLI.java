@@ -1,13 +1,19 @@
-package core;
+package cli;
 
+import cli.commands.Command;
+import cli.commands.CreateTableCommand;
+import cli.commands.InsertIntoCommand;
+import cli.commands.SelectAllCommand;
 import com.google.common.base.Splitter;
 import configuration.DatastoreModule;
+import core.Datastore;
 import model.Row;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -37,7 +43,7 @@ public class CLI {
             try {
                 String line = lineReader.readLine(PROMPT);
                 try {
-                    parseMessage(datastore, line);
+                    executeCommand(datastore, line);
                 } catch (IllegalArgumentException e) {
                     System.out.println(format("Error: %s", e.getMessage()));
                 }
@@ -47,33 +53,28 @@ public class CLI {
         }
     }
 
-    private void parseMessage(Datastore datastore, String message) {
+    private void executeCommand(Datastore datastore, String message) {
         if (message == null || message.length() == 0) {
             return;
         }
-        List<String> parts = Splitter.on(" ").omitEmptyStrings().splitToList(message.toLowerCase());
-        if (parts.size() == 0) {
-            return;
-        }
-        if (parts.get(0).equals("insert")) {
-            // INSERT <table_name> <valA,valB,valC>
-            if (parts.size() != 3) {
-                throw new IllegalArgumentException("Invalid argument count");
-            }
-            String tableName = parts.get(1);
-            String row = parts.get(2);
-            List<String> fields = Splitter.on(",").splitToList(row);
-            datastore.insertInto(tableName, new Row(fields.toArray(new String[fields.size()])));
-        } else if (parts.get(0).equals("create")) {
-            // CREATE <table_name> <typeA,typeB,typeC>
-            if (parts.size() != 3) {
-                throw new IllegalArgumentException("Invalid argument count");
-            }
-            String tableName = parts.get(1);
-            String schema = parts.get(2);
-            datastore.createTable(tableName,schema);
-        } else {
-            throw new IllegalArgumentException(format("Invalid command %s", parts.get(0)));
+        Command command = CommandParser.fromLine(message);
+        switch (command.getCommandType()) {
+            case CREATE_TABLE:
+                CreateTableCommand createCommand = (CreateTableCommand) command;
+                datastore.createTable(createCommand.getTableName(), createCommand.getSchema());
+                break;
+            case INSERT_INTO:
+                InsertIntoCommand insertCommand = (InsertIntoCommand) command;
+                datastore.insertInto(
+                        insertCommand.getTableName(),
+                        new Row(insertCommand.getValues().toArray(new String[insertCommand.getValues().size()])));
+                break;
+            case SELECT_ALL:
+                SelectAllCommand selectAllCommand = (SelectAllCommand) command;
+                datastore.selectAllFrom(selectAllCommand.getTableName());
+                break;
+            default:
+                break;
         }
     }
 }

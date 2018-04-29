@@ -1,7 +1,7 @@
+import actors.AbstractClientActor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import actors.AbstractClientActor;
 import messages.QueryErrorMsg;
 import messages.QueryResultMsg;
 import messages.QuerySuccessMsg;

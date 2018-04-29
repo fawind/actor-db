@@ -1,5 +1,4 @@
 import configuration.DatastoreModule;
-import actors.Datastore;
 import core.Datastore;
 import model.Row;
 import org.junit.After;
