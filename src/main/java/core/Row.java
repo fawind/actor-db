@@ -20,8 +20,9 @@ public class Row implements Comparable<Row> {
         this.values = Arrays.asList(values);
     }
 
-    public String getAt(int columnIndex) {
-        return values.get(columnIndex);
+
+    public <ResultType> ResultType getAt(int columnIndex) {
+        return (ResultType) values.get(columnIndex);
     }
 
     public void updateAt(int columnIndex, String value) {
@@ -39,8 +40,7 @@ public class Row implements Comparable<Row> {
     }
 
     public long getHashKey() {
-        // TODO: change back
-         return hashFunction.hashString(getKey(), Charsets.UTF_8).asLong();
-//        return Long.valueOf(getKey());
+         return hashFunction.hashString(String.valueOf(getKey()), Charsets.UTF_8).asLong();
+         // return Long.valueOf(getKey());
     }
 }

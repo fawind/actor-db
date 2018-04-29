@@ -27,9 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Table extends AbstractDBActor {
-    private final String name;
     private final String layout;
-    private final ActorRef master;
     private int highestPartitionId = 1;
 
     private final Multimap<ActorRef, BlockedRow> blockedRows;
@@ -54,14 +52,12 @@ public class Table extends AbstractDBActor {
                 .build();
     }
 
-    static Props props(String tableName, String layout, ActorRef master) {
-        return Props.create(Table.class, () -> new Table(tableName, layout, master));
+    static Props props(String layout) {
+        return Props.create(Table.class, () -> new Table(layout));
     }
 
-    private Table(String name, String layout, ActorRef master) {
-        this.name = name;
+    private Table(String layout) {
         this.layout = layout;
-        this.master = master;
 
         blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
         runningTransactions = new HashMap<>();
@@ -155,7 +151,7 @@ public class Table extends AbstractDBActor {
     private ActorRef createPartition(Range<Long> range) {
         int partitionId = highestPartitionId++;
         log.info("Created new partition #{} with range: {}", partitionId, range);
-        ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-actor_" + partitionId);
+        ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-" + partitionId);
         partitions.put(range, partition);
         numPartitions++;
         return partition;

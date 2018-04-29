@@ -53,8 +53,8 @@ public class Master extends AbstractDBActor {
             return;
         }
 
-        String actorName = "table-actor_" + tableName;
-        ActorRef table = getContext().actorOf(Table.props(msg.getTableName(), msg.getLayout(), getSelf()), actorName);
+        String actorName = "table-" + tableName;
+        ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
         log.info("Created actor: " + actorName);
 
