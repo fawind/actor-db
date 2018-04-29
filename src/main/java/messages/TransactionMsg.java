@@ -1,21 +1,24 @@
 package messages;
 
 import akka.actor.ActorRef;
+import core.Transaction;
 
 public abstract class TransactionMsg {
-    protected final long transactionId;
-    protected final ActorRef requester;
+    protected final Transaction transaction;
 
-    public TransactionMsg(long transactionId, ActorRef requester) {
-        this.transactionId = transactionId;
-        this.requester = requester;
+    public TransactionMsg(Transaction transaction) {
+        this.transaction = transaction;
     }
 
-    public long getTransactionId() {
-        return transactionId;
+    public final Transaction getTransaction() {
+        return transaction;
     }
 
-    public ActorRef getRequester() {
-        return requester;
+    public final long getTransactionId() {
+        return transaction.getTransactionId();
+    }
+
+    public final ActorRef getRequester() {
+        return transaction.getRequester();
     }
 }

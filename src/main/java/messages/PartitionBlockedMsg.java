@@ -1,15 +1,15 @@
 package messages;
 
-import core.Row;
+import core.BlockedRow;
 
 public class PartitionBlockedMsg {
-    private final Row row;
+    private final BlockedRow blockedRow;
 
-    public PartitionBlockedMsg(Row row) {
-        this.row = row;
+    public PartitionBlockedMsg(BlockedRow blockedRow) {
+        this.blockedRow = blockedRow;
     }
 
-    public Row getRow() {
-        return row;
+    public BlockedRow getBlockedRow() {
+        return blockedRow;
     }
 }

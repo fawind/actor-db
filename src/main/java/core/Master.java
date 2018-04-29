@@ -8,9 +8,12 @@ import messages.InsertRowMsg;
 import messages.QueryErrorMsg;
 import messages.QuerySuccessMsg;
 import messages.SelectAllMsg;
+import messages.SelectWhereMsg;
+import messages.TransactionMsg;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Master extends AbstractDBActor {
 
@@ -29,47 +32,54 @@ public class Master extends AbstractDBActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(CreateTableMsg.class, this::handleCreateTableMsg)
-                .match(InsertMsg.class, this::handleInsertMsg)
-                .match(SelectAllMsg.class, this::handleSelectAllMsg)
+                .match(CreateTableMsg.class, this::handleCreateTable)
+                .match(InsertMsg.class, this::handleInsert)
+                .match(SelectAllMsg.class, this::handleSelectAll)
+                .match(SelectWhereMsg.class, this::handleSelectWhere)
+                .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 
-    private void handleInsertMsg(InsertMsg msg) {
-        tables.get(msg.getTableName()).tell(new InsertRowMsg(msg.getRow()), getSelf());
+    private void handleInsert(InsertMsg msg) {
+        Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
+        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getTransaction()), getSelf()));
     }
 
-    private void handleCreateTableMsg(CreateTableMsg msg) {
-        log.info("createTableMsg = [" + msg.getName()+ ": " + msg.getLayout() + "]");
-
-        String tableName = msg.getName();
-
+    private void handleCreateTable(CreateTableMsg msg) {
+        String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists."), getSelf());
+            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()),
+                    getSelf());
             return;
         }
 
         String actorName = "table-actor_" + tableName;
-        ActorRef table = getContext().actorOf(Table.props(msg.getName(), msg.getLayout(), getSelf()), actorName);
+        ActorRef table = getContext().actorOf(Table.props(msg.getTableName(), msg.getLayout(), getSelf()), actorName);
 
         log.info("Created actor: " + actorName);
 
-        tables.put(msg.getName(), table);
-        getSender().tell(new QuerySuccessMsg(), getSelf());
+        tables.put(msg.getTableName(), table);
+        msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
     }
 
-    private void handleSelectAllMsg(SelectAllMsg msg) {
-        tables.get(msg.getTableName()).tell(msg, getSender());
+    private void handleSelectAll(SelectAllMsg msg) {
+        Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
+        table.ifPresent(t -> t.tell(msg, msg.getRequester()));
+    }
+
+    private void handleSelectWhere(SelectWhereMsg msg) {
+        Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
+        table.ifPresent(t -> t.tell(msg, msg.getRequester()));
     }
 
 
-    /*
-    protected:
-
-    void handleInsert(String tableName, Row row)
-    void handleSelectColumn(String tableName, String... columns)
-    void handleSelectWhere(String tableName, String column, FilterFn filter)
-     */
-
-
+    private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
+        ActorRef table = tables.get(tableName);
+        if (table == null) {
+            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction()), getSelf());
+            return Optional.empty();
+        } else {
+            return Optional.of(table);
+        }
+    }
 }

@@ -12,11 +12,11 @@ import messages.PartialQueryResultMsg;
 import messages.PartitionBlockedMsg;
 import messages.PartitionFullMsg;
 import messages.QueryResultMsg;
+import messages.QuerySuccessMsg;
 import messages.SelectAllMsg;
 import messages.SelectWhereMsg;
 import messages.SplitPartitionMsg;
 import messages.SplitSuccessMsg;
-import messages.SuccessMsg;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,9 +32,9 @@ public class Table extends AbstractDBActor {
     private final ActorRef master;
     private int highestPartitionId = 1;
 
-    private final Multimap<ActorRef, Row> blockedRows;
-    private final Map<Long, Set<Integer>> openTransactions;
-    private final Multimap<Long, Row> openTransactionResults;
+    private final Multimap<ActorRef, BlockedRow> blockedRows;
+    private final Map<Long, Set<Integer>> runningTransactions;
+    private final Multimap<Long, Row> runningTransactionResults;
 
     private RangeMap<Long, ActorRef> partitions = TreeRangeMap.create();
     private int numPartitions = 0;
@@ -49,7 +49,8 @@ public class Table extends AbstractDBActor {
                 .match(PartitionFullMsg.class, this::handlePartitionFull)
                 .match(PartitionBlockedMsg.class, this::handlePartitionBlocked)
                 .match(SplitSuccessMsg.class, this::handleSplitSuccess)
-                .match(SuccessMsg.class, msg -> master.tell(msg, getSelf()))
+                .match(QuerySuccessMsg.class, this::handleQuerySuccess)
+                .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 
@@ -63,8 +64,8 @@ public class Table extends AbstractDBActor {
         this.master = master;
 
         blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
-        openTransactions = new HashMap<>();
-        openTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
+        runningTransactions = new HashMap<>();
+        runningTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
 
         Range<Long> startRange = Range.closed(Long.MIN_VALUE, Long.MAX_VALUE);
         createPartition(startRange);
@@ -88,14 +89,14 @@ public class Table extends AbstractDBActor {
     private void handlePartialQueryResult(PartialQueryResultMsg msg) {
         long transactionId = msg.getTransactionId();
 
-        openTransactionResults.putAll(transactionId, msg.getResult());
+        runningTransactionResults.putAll(transactionId, msg.getResult());
 
         updateTransaction(transactionId, msg.getActorId());
 
         if (isTransactionDone(transactionId)) {
             finishTransaction(transactionId);
-            List<Row> result = new ArrayList<>(openTransactionResults.get(transactionId));
-            msg.getRequester().tell(new QueryResultMsg(result, msg), getSelf());
+            List<Row> result = new ArrayList<>(runningTransactionResults.get(transactionId));
+            msg.getRequester().tell(new QueryResultMsg(result, msg.getTransaction()), getSelf());
         }
     }
 
@@ -105,7 +106,7 @@ public class Table extends AbstractDBActor {
     }
 
     private void handlePartitionBlocked(PartitionBlockedMsg msg) {
-        blockedRows.put(getSender(), msg.getRow());
+        blockedRows.put(getSender(), msg.getBlockedRow());
     }
 
     private void handleSplitSuccess(SplitSuccessMsg msg) {
@@ -115,23 +116,27 @@ public class Table extends AbstractDBActor {
         partitions.put(msg.getOldRange(), msg.getOldPartition());
         partitions.put(msg.getNewRange(), msg.getNewPartition());
 
-        Collection<Row> rows = blockedRows.get(msg.getOldPartition());
-        for (Row row : rows) {
-            ActorRef partition = partitions.get(row.getHashKey());
-            partition.tell(new InsertRowMsg(row), getSelf());
+        Collection<BlockedRow> blockedRows = this.blockedRows.get(msg.getOldPartition());
+        for (BlockedRow blockedRow : blockedRows) {
+            ActorRef partition = partitions.get(blockedRow.getRow().getHashKey());
+            partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getTransaction()), getSelf());
         }
 
-        rows.clear();
+        blockedRows.clear();
+    }
+
+    private void handleQuerySuccess(QuerySuccessMsg msg) {
+        msg.getRequester().tell(msg, getSelf());
     }
 
     private void startTransaction(long transactionId) {
-        openTransactions.put(transactionId, createCurrentPartitionSet());
+        runningTransactions.put(transactionId, createCurrentPartitionSet());
     }
 
     private void updateTransaction(long transactionId, int actorId) {
-        Set<Integer> partitionSet = openTransactions.get(transactionId);
+        Set<Integer> partitionSet = runningTransactions.get(transactionId);
         if (partitionSet == null) {
-            log.error("Cannot update transaction #" + transactionId + ". It is not present in list of transactions");
+            log.error("Cannot update transaction #{}. It is not present in list of transactions", transactionId);
             return;
         }
 
@@ -139,17 +144,17 @@ public class Table extends AbstractDBActor {
     }
 
     private boolean isTransactionDone(long transactionId) {
-        Set<Integer> partitionSet = openTransactions.get(transactionId);
+        Set<Integer> partitionSet = runningTransactions.get(transactionId);
         return partitionSet != null && partitionSet.isEmpty();
     }
 
     private void finishTransaction(long transactionId) {
-        openTransactions.remove(transactionId);
+        runningTransactions.remove(transactionId);
     }
 
     private ActorRef createPartition(Range<Long> range) {
         int partitionId = highestPartitionId++;
-        log.info("Created new partition #" + partitionId + " with range: " + range + "");
+        log.info("Created new partition #{} with range: {}", partitionId, range);
         ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-actor_" + partitionId);
         partitions.put(range, partition);
         numPartitions++;
@@ -170,16 +175,4 @@ public class Table extends AbstractDBActor {
 
         return partitionSet;
     }
-
-
-    /*
-    protected:
-
-    void handleSelectAll()
-    void handleSelectColumn(String... columns)
-    void handleSelectWhere(String column, FilterFn filter)
-
-
-     */
-
 }

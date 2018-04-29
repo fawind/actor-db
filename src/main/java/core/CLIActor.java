@@ -13,8 +13,9 @@ public class CLIActor extends AbstractDBActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(QuerySuccessMsg.class, msg -> log.info("Query successful"))
-                .match(QueryResultMsg.class, msg -> log.info("Query result\n" + msg.getResult()))
-                .match(QueryErrorMsg.class, msg -> log.error("Query error: " + msg.getMsg()))
+                .match(QueryResultMsg.class, msg -> log.info("Query result\n{}", msg.getResult()))
+                .match(QueryErrorMsg.class, msg -> log.error("Query error: {}", msg.getMsg()))
+                .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 

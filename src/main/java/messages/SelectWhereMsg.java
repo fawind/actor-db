@@ -1,7 +1,7 @@
 package messages;
 
-import akka.actor.ActorRef;
 import core.Row;
+import core.Transaction;
 
 import java.util.function.Predicate;
 
@@ -9,8 +9,8 @@ public class SelectWhereMsg extends TransactionMsg {
     private final String tableName;
     private final Predicate<Row> whereFn;
 
-    public SelectWhereMsg(String tableName, Predicate<Row> whereFn, long transactionId, ActorRef requester) {
-        super(transactionId, requester);
+    public SelectWhereMsg(String tableName, Predicate<Row> whereFn, Transaction transaction) {
+        super(transaction);
         this.tableName = tableName;
         this.whereFn = whereFn;
     }

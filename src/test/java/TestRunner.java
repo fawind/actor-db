@@ -13,7 +13,7 @@ public class TestRunner {
     @Before
     public void setUp() {
         store = DatastoreModule.createInstance();
-        store.start();
+        store.startWithCustomClientActor(TestClientActor.props(), "TestClient");
     }
 
     @After
@@ -45,5 +45,15 @@ public class TestRunner {
         }
 
         store.selectAllFrom(tableName);
+    }
+
+    @Test
+    public void testSelectWhere() {
+        store.createTable(tableName, "int,int,int");
+        for (int i = 0; i < 10; ++i) {
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+        }
+
+        store.selectFromWhere(tableName, row -> row.getKey().equals("3"));
     }
 }

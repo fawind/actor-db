@@ -8,6 +8,7 @@ import messages.InsertMsg;
 import messages.SelectAllMsg;
 import messages.SelectWhereMsg;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class Datastore implements AutoCloseable {
@@ -18,6 +19,8 @@ public class Datastore implements AutoCloseable {
     private ActorRef master;
     private ActorRef clientActor;
 
+    private AtomicLong nextTransactionId;
+
     public ActorRef start() {
         return startWithCustomClientActor(CLIActor.props(), CLIActor.ACTOR_NAME);
     }
@@ -26,27 +29,37 @@ public class Datastore implements AutoCloseable {
         actorSystem = ActorSystem.create(SYSTEM_NAME);
         master = actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
         clientActor = actorSystem.actorOf(props, name);
+
+        nextTransactionId = new AtomicLong();
         return clientActor;
     }
 
     public void createTable(String tableName, String schema) {
-        master.tell(new CreateTableMsg(tableName, schema, 0, clientActor), clientActor);
+        tellMaster(new CreateTableMsg(tableName, schema, getNextTransaction()));
     }
 
     public void insertInto(String tableName, Row row) {
-        master.tell(new InsertMsg(tableName, row, 0, clientActor), clientActor);
+        tellMaster(new InsertMsg(tableName, row, getNextTransaction()));
     }
 
     public void selectAllFrom(String tableName) {
-        master.tell(new SelectAllMsg(tableName, 0, clientActor), clientActor);
+        tellMaster(new SelectAllMsg(tableName, getNextTransaction()));
     }
 
     public void selectFromWhere(String tableName, Predicate<Row> whereFn) {
-        master.tell(new SelectWhereMsg(tableName, whereFn, 0, clientActor), clientActor);
+        tellMaster(new SelectWhereMsg(tableName, whereFn, getNextTransaction()));
     }
 
     @Override
     public void close() throws Exception {
         actorSystem.terminate();
+    }
+
+    private <MsgType> void tellMaster(MsgType msg) {
+        master.tell(msg, ActorRef.noSender());
+    }
+
+    private Transaction getNextTransaction() {
+        return new Transaction(nextTransactionId.getAndIncrement(), clientActor);
     }
 }

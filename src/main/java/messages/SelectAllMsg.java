@@ -1,12 +1,12 @@
 package messages;
 
-import akka.actor.ActorRef;
+import core.Transaction;
 
 public final class SelectAllMsg extends TransactionMsg {
     private final String tableName;
 
-    public SelectAllMsg(String tableName, long transactionId, ActorRef requester) {
-        super(transactionId, requester);
+    public SelectAllMsg(String tableName, Transaction transaction) {
+        super(transaction);
         this.tableName = tableName;
     }
 

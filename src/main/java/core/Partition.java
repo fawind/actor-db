@@ -8,20 +8,17 @@ import messages.PartialQueryResultMsg;
 import messages.PartialSplitSuccessMsg;
 import messages.PartitionBlockedMsg;
 import messages.PartitionFullMsg;
-import messages.QueryResultMsg;
 import messages.QuerySuccessMsg;
 import messages.SelectAllMsg;
 import messages.SelectWhereMsg;
 import messages.SplitInsertMsg;
 import messages.SplitPartitionMsg;
 import messages.SplitSuccessMsg;
-import messages.SuccessMsg;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
@@ -53,30 +50,31 @@ public class Partition extends AbstractDBActor {
                 .match(SplitPartitionMsg.class, this::handleSplitPartition)
                 .match(SplitInsertMsg.class, this::handleSplitInsert)
                 .match(PartialSplitSuccessMsg.class, this::handlePartialSplitSuccess)
+                .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
         List<Row> resultRows = new ArrayList<>(rows);
-        getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg), getSelf());
+        getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg.getTransaction()), getSelf());
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
         Predicate<Row> whereFn = msg.getWhereFn();
         List<Row> resultRows = rows.stream().filter(whereFn).collect(Collectors.toList());
-        getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg), getSelf());
+        getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg.getTransaction()), getSelf());
     }
 
     private void handleInsert(InsertRowMsg msg) {
         if (isFull) {
             // Can't insert new rows while the partition is being split
-            getSender().tell(new PartitionBlockedMsg(msg.getRow()), getSelf());
+            BlockedRow blockedRow = new BlockedRow(msg.getRow(), msg.getTransaction());
+            getSender().tell(new PartitionBlockedMsg(blockedRow), getSelf());
             return;
         }
 
         rows.add(msg.getRow());
-        log.info("Added row: " + msg.getRow());
-
+        log.info("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
 
         if (rows.size() == capacity) {
             isFull = true;
@@ -87,12 +85,12 @@ public class Partition extends AbstractDBActor {
             Range<Long> newRange = Range.closed(lowestInNewPartition, range.upperEndpoint());
 
             // We want to cover all values up to the lowest in the new partition
-            range = Range.closedOpen(range.lowerEndpoint(), lowestInNewPartition);
+            range = Range.closed(range.lowerEndpoint(), lowestInNewPartition - 1);
 
             getSender().tell(new PartitionFullMsg(newRange), getSelf());
         }
 
-        getSender().tell(new SuccessMsg(), getSelf());
+        getSender().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
     }
 
     private void handleSplitPartition(SplitPartitionMsg msg) {
@@ -105,25 +103,15 @@ public class Partition extends AbstractDBActor {
 
     private void handleSplitInsert(SplitInsertMsg msg) {
         this.rows = msg.getRows();
-        log.info("Inserted new rows");
+        log.info("Inserted new rows from split");
         getSender().tell(new PartialSplitSuccessMsg(getSelf(), range), getSelf());
     }
 
     private void handlePartialSplitSuccess(PartialSplitSuccessMsg msg) {
+        // Only keep first half of rows because the rest were successfully moved to new partition
         rows = new ArrayList<>(rows.subList(0, capacity / 2));
         isFull = false;
 
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
     }
-
-
-    /*
-    protected:
-
-    void handleSelectAll()
-    void handleSelectColumn(String... columns)
-    void handleSelectWhere(String column, FilterFn filter)
-
-    Array[N] rows
-     */
 }

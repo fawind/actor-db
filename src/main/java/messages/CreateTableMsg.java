@@ -1,14 +1,14 @@
 package messages;
 
-import akka.actor.ActorRef;
+import core.Transaction;
 
 public final class CreateTableMsg extends TransactionMsg {
-    private final String name;
+    private final String tableName;
     private final String layout;
 
-    public CreateTableMsg(String name, String layout, long transactionId, ActorRef requester) {
-        super(transactionId, requester);
-        this.name = name;
+    public CreateTableMsg(String tableName, String layout, Transaction transaction) {
+        super(transaction);
+        this.tableName = tableName;
         this.layout = layout;
     }
 
@@ -16,7 +16,7 @@ public final class CreateTableMsg extends TransactionMsg {
         return layout;
     }
 
-    public String getName() {
-        return name;
+    public String getTableName() {
+        return tableName;
     }
 }
