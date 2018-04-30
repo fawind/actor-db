@@ -13,6 +13,7 @@ public class Row implements Comparable<Row> {
 
     private static final HashFunction HASH_FUNCTION = Hashing.sha256();
 
+    private final long hashKey;
     private final List<String> values;
 
     public Row(String... values) {
@@ -20,6 +21,7 @@ public class Row implements Comparable<Row> {
             throw new RuntimeException("Cannot create empty row");
         }
         this.values = Arrays.asList(values);
+        this.hashKey = HASH_FUNCTION.hashString(String.valueOf(this.values.get(0)), Charsets.UTF_8).asLong();
     }
 
     public <ResultType> ResultType getAt(int columnIndex) {
@@ -27,6 +29,9 @@ public class Row implements Comparable<Row> {
     }
 
     public void updateAt(int columnIndex, String value) {
+        if (columnIndex == 0) {
+            // TODO: cannot update key column
+        }
         values.set(columnIndex, value);
     }
 
@@ -36,11 +41,10 @@ public class Row implements Comparable<Row> {
 
     @Override
     public int compareTo(Row other) {
-        return getKey().compareTo(other.getKey());
+        return Long.compare(getHashKey(), other.getHashKey());
     }
 
     public long getHashKey() {
-         return HASH_FUNCTION.hashString(String.valueOf(getKey()), Charsets.UTF_8).asLong();
-         // return Long.valueOf(getKey());
+         return hashKey;
     }
 }

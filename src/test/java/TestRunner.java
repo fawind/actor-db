@@ -32,7 +32,7 @@ public class TestRunner {
     @Test
     public void testPartitioning() {
         store.createTable(tableName, defaultLayout);
-        for (int i = 1; i <= 100; ++i) {
+        for (int i = 0; i <= 100; ++i) {
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
         }
     }
@@ -40,7 +40,7 @@ public class TestRunner {
     @Test
     public void testSelectAll() {
         store.createTable(tableName, defaultLayout);
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i <= 100; ++i) {
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
         }
 
@@ -50,10 +50,10 @@ public class TestRunner {
     @Test
     public void testSelectWhere() {
         store.createTable(tableName, defaultLayout);
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i <= 100; ++i) {
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
         }
 
-        store.selectFromWhere(tableName, row -> row.getKey().equals("3"));
+        store.selectFromWhere(tableName, row -> row.getKey().equals("13"));
     }
 }

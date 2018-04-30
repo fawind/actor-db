@@ -77,7 +77,7 @@ public class Partition extends AbstractDBActor {
         }
 
         rows.add(msg.getRow());
-        log.info("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
+        log.debug("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
 
         if (rows.size() == capacity) {
             isFull = true;
