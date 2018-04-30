@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 public class Partition extends AbstractDBActor {
 
     private final int CAPACITY = 10;
-    private final int LAST_TRANSACTION_CACHE_SIZE = 1024;
 
     private final int partitionId;
     private final ActorRef table;
@@ -50,7 +49,6 @@ public class Partition extends AbstractDBActor {
     private List<Row> rows;
 
     private List<ActorRef> replicas = new ArrayList<>();
-    private Set<Integer> lastTransactions;
 
     private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
         this.partitionId = partitionId;
