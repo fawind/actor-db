@@ -1,4 +1,4 @@
-package messages;
+package messages.query;
 
 import akka.actor.ActorRef;
 import model.Transaction;

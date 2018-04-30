@@ -7,6 +7,23 @@ import java.util.function.Function;
 
 public class CommandBuilder {
 
+    private final Map<String, Function<List<String>, Command>> creators;
+
+    public CommandBuilder(Map<String, Function<List<String>, Command>> creators) {
+        this.creators = creators;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public Command getCommand(String identifier, List<String> token) {
+        if (!creators.containsKey(identifier)) {
+            return new InvalidCommand();
+        }
+        return creators.get(identifier).apply(token);
+    }
+
     public static class Builder {
 
         private final Map<String, Function<List<String>, Command>> creators = new HashMap<>();
@@ -19,22 +36,5 @@ public class CommandBuilder {
         public CommandBuilder build() {
             return new CommandBuilder(creators);
         }
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    private final Map<String, Function<List<String>, Command>> creators;
-
-    public CommandBuilder(Map<String, Function<List<String>, Command>> creators) {
-        this.creators = creators;
-    }
-
-    public Command getCommand(String identifier, List<String> token) {
-        if (!creators.containsKey(identifier)) {
-            return new InvalidCommand();
-        }
-        return creators.get(identifier).apply(token);
     }
 }

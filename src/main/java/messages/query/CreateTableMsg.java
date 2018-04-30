@@ -1,19 +1,21 @@
-package messages;
+package messages.query;
 
 import model.Transaction;
+
+import java.util.List;
 
 public final class CreateTableMsg extends TransactionMsg {
 
     private final String tableName;
-    private final String layout;
+    private final List<String> layout;
 
-    public CreateTableMsg(String tableName, String layout, Transaction transaction) {
+    public CreateTableMsg(String tableName, List<String> layout, Transaction transaction) {
         super(transaction);
         this.tableName = tableName;
         this.layout = layout;
     }
 
-    public String getLayout() {
+    public List<String> getLayout() {
         return layout;
     }
 

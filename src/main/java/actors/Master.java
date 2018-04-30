@@ -2,14 +2,14 @@ package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import messages.CreateTableMsg;
-import messages.InsertMsg;
-import messages.InsertRowMsg;
-import messages.QueryErrorMsg;
-import messages.QuerySuccessMsg;
-import messages.SelectAllMsg;
-import messages.SelectWhereMsg;
-import messages.TransactionMsg;
+import messages.query.CreateTableMsg;
+import messages.query.InsertMsg;
+import messages.query.InsertRowMsg;
+import messages.query.QueryErrorMsg;
+import messages.query.QuerySuccessMsg;
+import messages.query.SelectAllMsg;
+import messages.query.SelectWhereMsg;
+import messages.query.TransactionMsg;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,15 +18,14 @@ import java.util.Optional;
 public class Master extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "master";
-
-    public static Props props() {
-        return Props.create(Master.class, Master::new);
-    }
-
     private final Map<String, ActorRef> tables;
 
     private Master() {
         this.tables = new HashMap<>();
+    }
+
+    public static Props props() {
+        return Props.create(Master.class, Master::new);
     }
 
     @Override
@@ -48,7 +47,8 @@ public class Master extends AbstractDBActor {
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()),
+            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction
+                            ()),
                     getSelf());
             return;
         }
@@ -75,7 +75,8 @@ public class Master extends AbstractDBActor {
     private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
         ActorRef table = tables.get(tableName);
         if (table == null) {
-            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction()), getSelf());
+            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction
+                    ()), getSelf());
             return Optional.empty();
         } else {
             return Optional.of(table);

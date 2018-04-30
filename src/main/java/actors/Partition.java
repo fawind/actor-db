@@ -1,42 +1,50 @@
 package actors;
 
 import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Cancellable;
 import akka.actor.Props;
+import akka.actor.Scheduler;
 import com.google.common.collect.Range;
-import messages.InsertRowMsg;
-import messages.PartialQueryResultMsg;
-import messages.PartialSplitSuccessMsg;
-import messages.PartitionBlockedMsg;
-import messages.PartitionFullMsg;
-import messages.QuerySuccessMsg;
-import messages.SelectAllMsg;
-import messages.SelectWhereMsg;
-import messages.SplitInsertMsg;
-import messages.SplitPartitionMsg;
-import messages.SplitSuccessMsg;
+import messages.ReplicateAckMsg;
+import messages.partition.PartialSplitSuccessMsg;
+import messages.partition.PartitionBlockedMsg;
+import messages.partition.PartitionFullMsg;
+import messages.partition.SplitInsertMsg;
+import messages.partition.SplitPartitionMsg;
+import messages.partition.SplitSuccessMsg;
+import messages.query.InsertRowMsg;
+import messages.query.PartialQueryResultMsg;
+import messages.query.QuerySuccessMsg;
+import messages.query.SelectAllMsg;
+import messages.query.SelectWhereMsg;
+import messages.query.TransactionMsg;
+import messages.replication.ReplicateMsg;
+import messages.replication.UpdateReplicasMsg;
 import model.BlockedRow;
 import model.Row;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
 
-    public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
-        return Props.create(Partition.class, () -> new Partition(partitionId, startRange, table));
-    }
-
     private final int partitionId;
     private final ActorRef table;
     private final int capacity = 10;
-
-    private List<Row> rows;
-    private Range<Long> range;
+    private final Map<Long, Map<ActorRef, Cancellable>> openTransactionAcks = new HashMap<>();
     private boolean isFull = false;
+    private Range<Long> range;
+    private List<Row> rows;
 
+    private List<ActorRef> replicas = new ArrayList<>();
     private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
         this.partitionId = partitionId;
         this.range = startRange;
@@ -44,15 +52,28 @@ public class Partition extends AbstractDBActor {
         this.rows = new ArrayList<>(capacity);
     }
 
+    public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
+        return Props.create(Partition.class, () -> new Partition(partitionId, startRange, table));
+    }
+
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                // Querying
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
                 .match(InsertRowMsg.class, this::handleInsert)
+
+                // Partitioning
                 .match(SplitPartitionMsg.class, this::handleSplitPartition)
                 .match(SplitInsertMsg.class, this::handleSplitInsert)
                 .match(PartialSplitSuccessMsg.class, this::handlePartialSplitSuccess)
+
+                // Replicating
+                .match(ReplicateMsg.class, this::handleReplicate)
+                .match(ReplicateAckMsg.class, this::handleReplicateAck)
+                .match(UpdateReplicasMsg.class, this::handleUpdateReplicas)
+
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
@@ -76,8 +97,12 @@ public class Partition extends AbstractDBActor {
             return;
         }
 
+        assert range.contains(msg.getRow().getHashKey());
+
         rows.add(msg.getRow());
         log.debug("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
+
+        broadcastToReplicasWithRetry(new ReplicateMsg(msg.getRow(), msg.getTransaction()));
 
         if (rows.size() == capacity) {
             isFull = true;
@@ -103,8 +128,8 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleSplitInsert(SplitInsertMsg msg) {
-        this.rows = msg.getRows();
-        log.info("Inserted new rows from split");
+        rows = msg.getRows();
+        log.info("Inserted {} new rows from split", rows.size());
         getSender().tell(new PartialSplitSuccessMsg(getSelf(), range), getSelf());
     }
 
@@ -114,4 +139,49 @@ public class Partition extends AbstractDBActor {
         isFull = false;
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
     }
+
+    private void handleReplicate(ReplicateMsg msg) {
+        // TODO: this is not idempotent
+//        assert rows.size() < capacity;
+        rows.add(msg.getRow());
+        log.debug("(TID: {}) Replicated row: {}", msg.getTransactionId(), msg.getRow());
+        getSender().tell(new ReplicateAckMsg(msg.getTransaction()), getSelf());
+    }
+
+    private void handleUpdateReplicas(UpdateReplicasMsg msg) {
+        replicas = msg.getReplicas();
+    }
+
+    private void handleReplicateAck(ReplicateAckMsg msg) {
+        Map<ActorRef, Cancellable> acks = openTransactionAcks.get(msg.getTransactionId());
+        if (acks == null) {
+            return;
+        }
+
+        Cancellable cancellable = acks.remove(getSender());
+        if (cancellable != null) {
+            cancellable.cancel();
+        }
+
+        if (acks.isEmpty()) {
+            openTransactionAcks.remove(msg.getTransactionId());
+            log.debug("Completed replication for transaction #{}", msg.getTransactionId());
+        }
+    }
+
+    private <MsgType extends TransactionMsg> void broadcastToReplicasWithRetry(MsgType msg) {
+        long transactionId = msg.getTransactionId();
+        Map<ActorRef, Cancellable> acks = new TreeMap<>();
+        openTransactionAcks.put(transactionId, acks);
+
+        ActorSystem system = getContext().getSystem();
+        Scheduler scheduler = system.scheduler();
+
+        for (ActorRef replica : replicas) {
+            Cancellable c = scheduler.schedule(Duration.ZERO, Duration.ofSeconds(10), replica, msg, system.dispatcher
+                    (), getSelf());
+            acks.put(replica, c);
+        }
+    }
+
 }

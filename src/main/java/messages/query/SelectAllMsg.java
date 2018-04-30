@@ -1,4 +1,4 @@
-package messages;
+package messages.query;
 
 import model.Transaction;
 

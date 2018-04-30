@@ -5,20 +5,27 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TestRunner {
     private Datastore store;
     private String tableName = "foo";
-    private String defaultLayout = "int,string,int";
+    private List<String> defaultLayout = new ArrayList<>();
 
     @Before
     public void setUp() {
         store = DatastoreModule.createInstance();
         store.startWithCustomClientActor(TestClientActor.props(), "TestClient");
+
+        defaultLayout.add("int");
+        defaultLayout.add("string");
+        defaultLayout.add("int");
     }
 
     @After
     public void tearDown() throws Exception {
-        Thread.sleep(1000);
+        Thread.sleep(500);
         store.close();
     }
 
@@ -56,4 +63,13 @@ public class TestRunner {
 
         store.selectFromWhere(tableName, row -> row.getKey().equals("13"));
     }
+
+//    @Test
+//    public void testPartitioningLarge() {
+//        store.createTable(tableName, defaultLayout);
+//        for (int i = 0; i <= 1000; ++i) {
+//            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+//        }
+//    }
+
 }

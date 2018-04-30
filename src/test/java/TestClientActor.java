@@ -2,12 +2,16 @@ import actors.AbstractClientActor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import messages.QueryErrorMsg;
-import messages.QueryResultMsg;
-import messages.QuerySuccessMsg;
+import messages.query.QueryErrorMsg;
+import messages.query.QueryResultMsg;
+import messages.query.QuerySuccessMsg;
 
 public class TestClientActor extends AbstractClientActor {
     protected LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
+
+    public static Props props() {
+        return Props.create(TestClientActor.class);
+    }
 
     @Override
     protected void handleQuerySuccess(QuerySuccessMsg msg) {
@@ -22,9 +26,5 @@ public class TestClientActor extends AbstractClientActor {
     @Override
     protected void handleQueryError(QueryErrorMsg msg) {
         log.error("(TID: {}) Query error: {}", msg.getTransactionId(), msg.getMsg());
-    }
-
-    public static Props props() {
-        return Props.create(TestClientActor.class);
     }
 }

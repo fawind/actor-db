@@ -1,4 +1,4 @@
-package messages;
+package messages.partition;
 
 import akka.actor.ActorRef;
 

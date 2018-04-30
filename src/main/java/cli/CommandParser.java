@@ -33,9 +33,10 @@ public class CommandParser {
         if (parts.size() != 3) {
             throw new IllegalArgumentException("Invalid argument count");
         }
+        List<String> types = Splitter.on(", ").splitToList(parts.get(2));
         return CreateTableCommand.builder()
                 .tableName(parts.get(1))
-                .schema(parts.get(2))
+                .schema(types)
                 .build();
     }
 

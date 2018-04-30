@@ -4,7 +4,6 @@ import cli.commands.Command;
 import cli.commands.CreateTableCommand;
 import cli.commands.InsertIntoCommand;
 import cli.commands.SelectAllCommand;
-import com.google.common.base.Splitter;
 import configuration.DatastoreModule;
 import core.Datastore;
 import model.Row;
@@ -12,9 +11,6 @@ import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static java.lang.String.format;
 

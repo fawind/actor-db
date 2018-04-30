@@ -1,4 +1,4 @@
-package messages;
+package messages.partition;
 
 import com.google.common.collect.Range;
 

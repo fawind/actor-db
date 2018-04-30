@@ -1,9 +1,9 @@
 package actors;
 
 import akka.actor.AbstractActor;
-import messages.QueryErrorMsg;
-import messages.QueryResultMsg;
-import messages.QuerySuccessMsg;
+import messages.query.QueryErrorMsg;
+import messages.query.QueryResultMsg;
+import messages.query.QuerySuccessMsg;
 
 public abstract class AbstractClientActor extends AbstractActor {
 

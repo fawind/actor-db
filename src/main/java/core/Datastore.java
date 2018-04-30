@@ -5,13 +5,14 @@ import actors.Master;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import messages.CreateTableMsg;
-import messages.InsertMsg;
-import messages.SelectAllMsg;
-import messages.SelectWhereMsg;
+import messages.query.CreateTableMsg;
+import messages.query.InsertMsg;
+import messages.query.SelectAllMsg;
+import messages.query.SelectWhereMsg;
 import model.Row;
 import model.Transaction;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
@@ -38,7 +39,7 @@ public class Datastore implements AutoCloseable {
         return clientActor;
     }
 
-    public void createTable(String tableName, String schema) {
+    public void createTable(String tableName, List<String> schema) {
         tellMaster(new CreateTableMsg(tableName, schema, getNextTransaction()));
     }
 
