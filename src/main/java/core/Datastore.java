@@ -6,6 +6,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import messages.query.CreateTableMsg;
+import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
@@ -41,6 +42,10 @@ public class Datastore implements AutoCloseable {
 
     public void createTable(String tableName, List<String> schema) {
         tellMaster(new CreateTableMsg(tableName, schema, getNextTransaction()));
+    }
+
+    public void dropTable(String tableName) {
+        tellMaster(new DropTableMsg(tableName, getNextTransaction()));
     }
 
     public void insertInto(String tableName, Row row) {

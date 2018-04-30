@@ -64,12 +64,23 @@ public class TestRunner {
         store.selectFromWhere(tableName, row -> row.getKey().equals("13"));
     }
 
-//    @Test
-//    public void testPartitioningLarge() {
-//        store.createTable(tableName, defaultLayout);
-//        for (int i = 0; i <= 1000; ++i) {
-//            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
-//        }
-//    }
+    @Test
+    public void testPartitioningLarge() {
+        store.createTable(tableName, defaultLayout);
+        for (int i = 0; i <= 1000; ++i) {
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+        }
+    }
+
+
+    @Test
+    public void testDropTable() {
+        store.createTable(tableName, defaultLayout);
+        for (int i = 0; i <= 10; ++i) {
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+        }
+
+        store.dropTable(tableName);
+    }
 
 }

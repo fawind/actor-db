@@ -24,6 +24,10 @@ public class Row implements Comparable<Row> {
         this.hashKey = HASH_FUNCTION.hashString(String.valueOf(this.values.get(0)), Charsets.UTF_8).asLong();
     }
 
+    public List<String> getValues() {
+        return values;
+    }
+
     public <ResultType> ResultType getAt(int columnIndex) {
         return (ResultType) values.get(columnIndex);
     }

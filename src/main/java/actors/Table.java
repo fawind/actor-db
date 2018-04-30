@@ -32,16 +32,25 @@ import java.util.Set;
 
 public class Table extends AbstractDBActor {
 
+    // How many partitions should hold the same info. Factor e.g. 3 equals 1 leader partition and 2 replica
+    private final int PARTITION_REPLICATION_FACTOR = 2;
+
     private final List<String> layout;
+
+    // Map of Rows that could not be inserted to a partition because of ongoing splitting
     private final Multimap<ActorRef, BlockedRow> blockedRows;
+
+    // Maps of current transactions (by ID) to the actors which have not responded and to the accumulated result
     private final Map<Long, Set<ActorRef>> runningTransactions;
     private final Multimap<Long, Row> runningTransactionResults;
+
+    // Map of all leading partitions and the key ranges they each cover
     private final RangeMap<Long, ActorRef> leaderPartitions = TreeRangeMap.create();
+
     // List of all partitions, including all replicas
     private final List<ActorRef> allPartitions = new ArrayList<>();
-    // How many partitions should hold the same info. Factor e.g. 3 equals 1 leader partition and 2 replica
-    private final int replicationFactor = 2;
-    private int numLeaderPartitions = 0;
+
+    // Counter to give unique ids to each partition
     private int highestPartitionId = 1;
 
     private Table(List<String> layout) {
@@ -168,7 +177,6 @@ public class Table extends AbstractDBActor {
                 partitionId);
 
         leaderPartitions.put(range, partition);
-        numLeaderPartitions++;
         allPartitions.add(partition);
 
         List<ActorRef> replicas = createReplicas(range);
@@ -180,10 +188,10 @@ public class Table extends AbstractDBActor {
     }
 
     private List<ActorRef> createReplicas(Range<Long> range) {
-        List<ActorRef> replicas = new ArrayList<>(replicationFactor);
+        List<ActorRef> replicas = new ArrayList<>(PARTITION_REPLICATION_FACTOR);
 
         // The first one is the leader partition, so we start at index 1
-        for (int i = 1; i < replicationFactor; i++) {
+        for (int i = 1; i < PARTITION_REPLICATION_FACTOR; i++) {
             int partitionId = getNextPartitionId();
             log.debug("Created new replica partition #{} for range: {}", partitionId, range);
             ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-" +

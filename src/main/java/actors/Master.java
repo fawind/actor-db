@@ -1,8 +1,10 @@
 package actors;
 
 import akka.actor.ActorRef;
+import akka.actor.PoisonPill;
 import akka.actor.Props;
 import messages.query.CreateTableMsg;
+import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.InsertRowMsg;
 import messages.query.QueryErrorMsg;
@@ -35,6 +37,7 @@ public class Master extends AbstractDBActor {
                 .match(InsertMsg.class, this::handleInsert)
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
+                .match(DropTableMsg.class, this::handleDropTable)
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
@@ -60,6 +63,18 @@ public class Master extends AbstractDBActor {
 
         tables.put(msg.getTableName(), table);
         msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
+    }
+
+    private void handleDropTable(DropTableMsg msg) {
+        String tableName = msg.getTableName();
+
+        ActorRef table = tables.remove(tableName);
+        if (table == null) {
+            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()), getSelf());
+            return;
+        }
+
+        table.tell(PoisonPill.getInstance(), ActorRef.noSender());
     }
 
     private void handleSelectAll(SelectAllMsg msg) {

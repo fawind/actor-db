@@ -26,30 +26,37 @@ import model.Row;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
 
+    private final int CAPACITY = 10;
+    private final int LAST_TRANSACTION_CACHE_SIZE = 1024;
+
     private final int partitionId;
     private final ActorRef table;
-    private final int capacity = 10;
     private final Map<Long, Map<ActorRef, Cancellable>> openTransactionAcks = new HashMap<>();
     private boolean isFull = false;
     private Range<Long> range;
     private List<Row> rows;
 
     private List<ActorRef> replicas = new ArrayList<>();
+    private Set<Integer> lastTransactions;
+
     private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
         this.partitionId = partitionId;
         this.range = startRange;
         this.table = table;
-        this.rows = new ArrayList<>(capacity);
+        this.rows = new ArrayList<>(CAPACITY);
     }
 
     public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
@@ -99,16 +106,17 @@ public class Partition extends AbstractDBActor {
 
         assert range.contains(msg.getRow().getHashKey());
 
+        // TODO: this is not idempotent
         rows.add(msg.getRow());
         log.debug("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
 
         broadcastToReplicasWithRetry(new ReplicateMsg(msg.getRow(), msg.getTransaction()));
 
-        if (rows.size() == capacity) {
+        if (rows.size() == CAPACITY) {
             isFull = true;
             rows.sort(Comparator.naturalOrder());
 
-            long lowestInNewPartition = rows.get(capacity / 2).getHashKey();
+            long lowestInNewPartition = rows.get(CAPACITY / 2).getHashKey();
 
             Range<Long> newRange = Range.closed(lowestInNewPartition, range.upperEndpoint());
 
@@ -118,12 +126,12 @@ public class Partition extends AbstractDBActor {
             getSender().tell(new PartitionFullMsg(newRange), getSelf());
         }
 
-        getSender().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
+        msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
     }
 
     private void handleSplitPartition(SplitPartitionMsg msg) {
         ActorRef other = msg.getNewPartition();
-        List<Row> rowsToCopy = new ArrayList<>(rows.subList(capacity / 2, capacity));
+        List<Row> rowsToCopy = new ArrayList<>(rows.subList(CAPACITY / 2, CAPACITY));
         other.tell(new SplitInsertMsg(rowsToCopy), getSelf());
     }
 
@@ -135,7 +143,7 @@ public class Partition extends AbstractDBActor {
 
     private void handlePartialSplitSuccess(PartialSplitSuccessMsg msg) {
         // Only keep first half of rows because the rest were successfully moved to new partition
-        rows = new ArrayList<>(rows.subList(0, capacity / 2));
+        rows = new ArrayList<>(rows.subList(0, CAPACITY / 2));
         isFull = false;
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
     }
@@ -178,8 +186,7 @@ public class Partition extends AbstractDBActor {
         Scheduler scheduler = system.scheduler();
 
         for (ActorRef replica : replicas) {
-            Cancellable c = scheduler.schedule(Duration.ZERO, Duration.ofSeconds(10), replica, msg, system.dispatcher
-                    (), getSelf());
+            Cancellable c = scheduler.schedule(Duration.ZERO, Duration.ofSeconds(10), replica, msg, system.dispatcher(), getSelf());
             acks.put(replica, c);
         }
     }
