@@ -5,6 +5,7 @@ import actors.Master;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import configuration.DatastoreConfig;
 import messages.query.CreateTableMsg;
 import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
@@ -13,6 +14,7 @@ import messages.query.SelectWhereMsg;
 import model.Row;
 import model.Transaction;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -21,18 +23,25 @@ public class Datastore implements AutoCloseable {
 
     public static final String SYSTEM_NAME = "actors-db";
 
+    private final DatastoreConfig config;
+
     private ActorSystem actorSystem;
     private ActorRef master;
     private ActorRef clientActor;
 
     private AtomicLong nextTransactionId;
 
+    @Inject
+    public Datastore(DatastoreConfig config) {
+        this.config = config;
+    }
+
     public ActorRef start() {
         return startWithCustomClientActor(CLIActor.props(), CLIActor.ACTOR_NAME);
     }
 
     public ActorRef startWithCustomClientActor(Props props, String name) {
-        actorSystem = ActorSystem.create(SYSTEM_NAME);
+        actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         master = actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
         clientActor = actorSystem.actorOf(props, name);
 
