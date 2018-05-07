@@ -6,7 +6,6 @@ import akka.actor.Cancellable;
 import akka.actor.Props;
 import akka.actor.Scheduler;
 import com.google.common.collect.Range;
-import messages.ReplicateAckMsg;
 import messages.partition.PartialSplitSuccessMsg;
 import messages.partition.PartitionBlockedMsg;
 import messages.partition.PartitionFullMsg;
@@ -19,17 +18,17 @@ import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
 import messages.query.TransactionMsg;
+import messages.replication.ReplicateAckMsg;
 import messages.replication.ReplicateMsg;
 import messages.replication.UpdateReplicasMsg;
 import model.BlockedRow;
 import model.Row;
+import utils.FIFOCache;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,6 +43,7 @@ public class Partition extends AbstractDBActor {
     private final int partitionId;
     private final ActorRef table;
     private final Map<Long, Map<ActorRef, Cancellable>> openTransactionAcks = new HashMap<>();
+    private final Set<Long> seenTransactions = FIFOCache.newSet(1024);
     private boolean isFull = false;
     private Range<Long> range;
     private List<Row> rows;
@@ -84,17 +84,23 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
+        if (!insertNewTransaction(msg)) return;
+
         List<Row> resultRows = new ArrayList<>(rows);
         getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg.getTransaction()), getSelf());
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
+        if (!insertNewTransaction(msg)) return;
+
         Predicate<Row> whereFn = msg.getWhereFn();
         List<Row> resultRows = rows.stream().filter(whereFn).collect(Collectors.toList());
         getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg.getTransaction()), getSelf());
     }
 
     private void handleInsert(InsertRowMsg msg) {
+        if (!insertNewTransaction(msg)) return;
+
         if (isFull) {
             // Can't insert new rows while the partition is being split
             BlockedRow blockedRow = new BlockedRow(msg.getRow(), msg.getTransaction());
@@ -104,7 +110,6 @@ public class Partition extends AbstractDBActor {
 
         assert range.contains(msg.getRow().getHashKey());
 
-        // TODO: this is not idempotent
         rows.add(msg.getRow());
         log.debug("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
 
@@ -147,7 +152,8 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleReplicate(ReplicateMsg msg) {
-        // TODO: this is not idempotent
+        if (!insertNewTransaction(msg)) return;
+
 //        assert rows.size() < capacity;
         rows.add(msg.getRow());
         log.debug("(TID: {}) Replicated row: {}", msg.getTransactionId(), msg.getRow());
@@ -187,6 +193,10 @@ public class Partition extends AbstractDBActor {
             Cancellable c = scheduler.schedule(Duration.ZERO, Duration.ofSeconds(10), replica, msg, system.dispatcher(), getSelf());
             acks.put(replica, c);
         }
+    }
+
+    private boolean insertNewTransaction(TransactionMsg msg) {
+        return seenTransactions.add(msg.getTransactionId());
     }
 
 }

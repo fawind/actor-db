@@ -1,4 +1,4 @@
-package messages;
+package messages.replication;
 
 import messages.query.TransactionMsg;
 import model.Transaction;
