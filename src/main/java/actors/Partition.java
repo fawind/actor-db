@@ -84,14 +84,14 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
-        if (!insertNewTransaction(msg)) return;
+        if (seenTransaction(msg)) return;
 
         List<Row> resultRows = new ArrayList<>(rows);
         getSender().tell(new PartialQueryResultMsg(resultRows, partitionId, msg.getTransaction()), getSelf());
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
-        if (!insertNewTransaction(msg)) return;
+        if (seenTransaction(msg)) return;
 
         Predicate<Row> whereFn = msg.getWhereFn();
         List<Row> resultRows = rows.stream().filter(whereFn).collect(Collectors.toList());
@@ -99,7 +99,7 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleInsert(InsertRowMsg msg) {
-        if (!insertNewTransaction(msg)) return;
+        if (seenTransaction(msg)) return;
 
         if (isFull) {
             // Can't insert new rows while the partition is being split
@@ -152,7 +152,7 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleReplicate(ReplicateMsg msg) {
-        if (!insertNewTransaction(msg)) return;
+        if (seenTransaction(msg)) return;
 
 //        assert rows.size() < capacity;
         rows.add(msg.getRow());
@@ -195,8 +195,8 @@ public class Partition extends AbstractDBActor {
         }
     }
 
-    private boolean insertNewTransaction(TransactionMsg msg) {
-        return seenTransactions.add(msg.getTransactionId());
+    private boolean seenTransaction(TransactionMsg msg) {
+        return !seenTransactions.add(msg.getTransactionId());
     }
 
 }
