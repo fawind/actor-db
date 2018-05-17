@@ -1,26 +1,32 @@
 package model;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
-@Data
-public class Row implements Comparable<Row> {
+public class Row implements Comparable<Row>, Serializable {
 
     private static final HashFunction HASH_FUNCTION = Hashing.sha256();
 
-    private final long hashKey;
-    private final List<String> values;
+    private long hashKey;
+    private List<String> values;
+
+    // Used for serialization
+    private Row() {}
 
     public Row(String... values) {
         if (values.length == 0) {
             throw new RuntimeException("Cannot create empty row");
         }
-        this.values = Arrays.asList(values);
+        this.values = new ArrayList<>(Arrays.asList(values));
         this.hashKey = HASH_FUNCTION.hashString(String.valueOf(this.values.get(0)), Charsets.UTF_8).asLong();
     }
 
@@ -43,12 +49,26 @@ public class Row implements Comparable<Row> {
         return getAt(0);
     }
 
+    public long getHashKey() {
+        return hashKey;
+    }
+
     @Override
     public int compareTo(Row other) {
         return Long.compare(getHashKey(), other.getHashKey());
     }
 
-    public long getHashKey() {
-        return hashKey;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Row row = (Row) o;
+        return hashKey == row.hashKey &&
+                Objects.equals(values, row.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(hashKey, values);
     }
 }

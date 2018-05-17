@@ -4,7 +4,10 @@ import model.Transaction;
 
 public final class QueryErrorMsg extends TransactionMsg {
 
-    private final String msg;
+    private String msg;
+
+    // Used for serialization
+    private QueryErrorMsg() {}
 
     public QueryErrorMsg(String msg, Transaction transaction) {
         super(transaction);

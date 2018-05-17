@@ -32,8 +32,12 @@ public class TestRunner {
     @Test
     public void testCreateTable() {
         store.createTable(tableName, defaultLayout);
-        store.createTable(tableName, defaultLayout);
+    }
 
+    @Test
+    public void testCreateDuplicateTable() {
+        store.createTable(tableName, defaultLayout);
+        store.createTable(tableName, defaultLayout);
     }
 
     @Test
@@ -82,5 +86,4 @@ public class TestRunner {
 
         store.dropTable(tableName);
     }
-
 }

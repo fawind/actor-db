@@ -2,9 +2,14 @@ package messages.partition;
 
 import model.BlockedRow;
 
-public class PartitionBlockedMsg {
+import java.io.Serializable;
 
-    private final BlockedRow blockedRow;
+public class PartitionBlockedMsg implements Serializable {
+
+    private BlockedRow blockedRow;
+
+    // Used for serialization
+    private PartitionBlockedMsg() {}
 
     public PartitionBlockedMsg(BlockedRow blockedRow) {
         this.blockedRow = blockedRow;

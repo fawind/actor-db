@@ -5,7 +5,10 @@ import model.Transaction;
 
 public class InsertRowMsg extends TransactionMsg {
 
-    private final Row row;
+    private Row row;
+
+    // Used for serialization
+    private InsertRowMsg() {}
 
     public InsertRowMsg(Row row, Transaction transaction) {
         super(transaction);

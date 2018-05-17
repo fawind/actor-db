@@ -6,8 +6,10 @@ import java.util.List;
 
 public final class CreateTableMsg extends TransactionMsg {
 
-    private final String tableName;
-    private final List<String> layout;
+    private String tableName;
+    private List<String> layout;
+
+    private CreateTableMsg() {}
 
     public CreateTableMsg(String tableName, List<String> layout, Transaction transaction) {
         super(transaction);

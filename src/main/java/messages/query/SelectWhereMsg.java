@@ -7,8 +7,11 @@ import java.util.function.Predicate;
 
 public class SelectWhereMsg extends TransactionMsg {
 
-    private final String tableName;
-    private final Predicate<Row> whereFn;
+    private String tableName;
+    private Predicate<Row> whereFn;
+
+    // Used for serialization
+    private SelectWhereMsg() {}
 
     public SelectWhereMsg(String tableName, Predicate<Row> whereFn, Transaction transaction) {
         super(transaction);

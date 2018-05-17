@@ -2,11 +2,15 @@ package messages.partition;
 
 import model.Row;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class SplitInsertMsg {
+public class SplitInsertMsg implements Serializable {
 
-    private final List<Row> rows;
+    private List<Row> rows;
+
+    // Used for serialization
+    private SplitInsertMsg() {}
 
     public SplitInsertMsg(List<Row> rows) {
         this.rows = rows;

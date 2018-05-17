@@ -3,23 +3,28 @@ package messages.query;
 import akka.actor.ActorRef;
 import model.Transaction;
 
-public abstract class TransactionMsg {
+import java.io.Serializable;
 
-    protected final Transaction transaction;
+public abstract class TransactionMsg implements Serializable {
+
+    protected Transaction transaction;
+
+    // Used for serialization
+    public TransactionMsg() {}
 
     public TransactionMsg(Transaction transaction) {
         this.transaction = transaction;
     }
 
-    public final Transaction getTransaction() {
+    public Transaction getTransaction() {
         return transaction;
     }
 
-    public final long getTransactionId() {
+    public long getTransactionId() {
         return transaction.getTransactionId();
     }
 
-    public final ActorRef getRequester() {
+    public ActorRef getRequester() {
         return transaction.getRequester();
     }
 }

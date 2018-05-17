@@ -3,7 +3,11 @@ package messages.query;
 import model.Transaction;
 
 public class DropTableMsg extends TransactionMsg {
-    private final String tableName;
+
+    private String tableName;
+
+    // Used for serialization
+    private DropTableMsg() {}
 
     public DropTableMsg(String tableName, Transaction transaction) {
         super(transaction);

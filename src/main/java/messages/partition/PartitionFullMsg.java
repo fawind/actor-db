@@ -2,9 +2,14 @@ package messages.partition;
 
 import com.google.common.collect.Range;
 
-public class PartitionFullMsg {
+import java.io.Serializable;
 
-    private final Range<Long> newRange;
+public class PartitionFullMsg implements Serializable {
+
+    private Range<Long> newRange;
+
+    // Used for serialization
+    private PartitionFullMsg() {}
 
     public PartitionFullMsg(Range<Long> newRange) {
         this.newRange = newRange;

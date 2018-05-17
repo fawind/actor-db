@@ -2,9 +2,12 @@ package messages.query;
 
 import model.Transaction;
 
-public final class SelectAllMsg extends TransactionMsg {
+public class SelectAllMsg extends TransactionMsg {
 
-    private final String tableName;
+    private String tableName;
+
+    // Used for serialization
+    private SelectAllMsg() {}
 
     public SelectAllMsg(String tableName, Transaction transaction) {
         super(transaction);
