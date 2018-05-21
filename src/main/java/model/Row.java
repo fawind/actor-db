@@ -1,10 +1,8 @@
 package model;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import lombok.Data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
