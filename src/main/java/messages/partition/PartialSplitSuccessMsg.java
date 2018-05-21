@@ -3,10 +3,15 @@ package messages.partition;
 import akka.actor.ActorRef;
 import com.google.common.collect.Range;
 
-public class PartialSplitSuccessMsg {
+import java.io.Serializable;
 
-    private final ActorRef newPartition;
-    private final Range<Long> newRange;
+public class PartialSplitSuccessMsg implements Serializable {
+
+    private ActorRef newPartition;
+    private Range<Long> newRange;
+
+    // Used for serialization
+    private PartialSplitSuccessMsg() {}
 
     public PartialSplitSuccessMsg(ActorRef newPartition, Range<Long> newRange) {
         this.newPartition = newPartition;

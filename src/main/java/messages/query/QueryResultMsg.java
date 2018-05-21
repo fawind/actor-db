@@ -7,7 +7,10 @@ import java.util.List;
 
 public class QueryResultMsg extends TransactionMsg {
 
-    private final List<Row> result;
+    private List<Row> result;
+
+    // Used for serialization
+    private QueryResultMsg() {}
 
     public QueryResultMsg(List<Row> result, Transaction transaction) {
         super(transaction);

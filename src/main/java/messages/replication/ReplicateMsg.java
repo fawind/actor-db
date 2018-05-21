@@ -5,7 +5,11 @@ import model.Row;
 import model.Transaction;
 
 public class ReplicateMsg extends TransactionMsg {
-    private final Row row;
+
+    private Row row;
+
+    // Used for serialization
+    private ReplicateMsg() {}
 
     public ReplicateMsg(Row row, Transaction transaction) {
         super(transaction);

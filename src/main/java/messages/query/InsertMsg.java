@@ -5,8 +5,11 @@ import model.Transaction;
 
 public class InsertMsg extends TransactionMsg {
 
-    private final String tableName;
-    private final Row row;
+    private String tableName;
+    private Row row;
+
+    // Used for serialization
+    private InsertMsg() {}
 
     public InsertMsg(String tableName, Row row, Transaction transaction) {
         super(transaction);

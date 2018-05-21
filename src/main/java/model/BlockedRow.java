@@ -1,12 +1,14 @@
 package model;
 
-import lombok.Data;
+import java.io.Serializable;
 
-@Data
-public class BlockedRow {
+public class BlockedRow implements Serializable {
 
-    private final Row row;
-    private final Transaction transaction;
+    private Row row;
+    private Transaction transaction;
+
+    // Used for serialization
+    private BlockedRow() {}
 
     public BlockedRow(Row row, Transaction transaction) {
         this.row = row;

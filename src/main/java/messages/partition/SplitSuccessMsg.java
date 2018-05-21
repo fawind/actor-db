@@ -3,12 +3,17 @@ package messages.partition;
 import akka.actor.ActorRef;
 import com.google.common.collect.Range;
 
-public class SplitSuccessMsg {
+import java.io.Serializable;
 
-    private final ActorRef newPartition;
-    private final Range<Long> newRange;
-    private final ActorRef oldPartition;
-    private final Range<Long> oldRange;
+public class SplitSuccessMsg implements Serializable {
+
+    private ActorRef newPartition;
+    private Range<Long> newRange;
+    private ActorRef oldPartition;
+    private Range<Long> oldRange;
+
+    // Used for serialization
+    private SplitSuccessMsg() {}
 
     public SplitSuccessMsg(ActorRef newPartition, Range<Long> newRange, ActorRef oldPartition, Range<Long> oldRange) {
         this.newPartition = newPartition;
