@@ -5,13 +5,10 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-public class Transaction implements Serializable {
+public abstract class Transaction implements Serializable {
 
     private long transactionId;
     private ActorRef requester;
-
-    // Used for serialization
-    private Transaction() {}
 
     public Transaction(long transactionId, ActorRef requester) {
         this.transactionId = transactionId;

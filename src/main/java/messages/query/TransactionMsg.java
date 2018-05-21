@@ -10,7 +10,7 @@ public abstract class TransactionMsg implements Serializable {
     protected Transaction transaction;
 
     // Used for serialization
-    public TransactionMsg() {}
+    protected TransactionMsg() {}
 
     public TransactionMsg(Transaction transaction) {
         this.transaction = transaction;

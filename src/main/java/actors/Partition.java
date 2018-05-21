@@ -38,17 +38,18 @@ import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
 
-    private final int CAPACITY = 10;
+    private final int CAPACITY = 100;
 
     private final int partitionId;
     private final ActorRef table;
-    private final Map<Long, Map<ActorRef, Cancellable>> openTransactionAcks = new HashMap<>();
+
     private final Set<Long> seenTransactions = FIFOCache.newSet(1024);
+
     private boolean isFull = false;
+
     private Range<Long> range;
     private List<Row> rows;
 
-    private List<ActorRef> replicas = new ArrayList<>();
 
     private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
         this.partitionId = partitionId;
@@ -73,11 +74,6 @@ public class Partition extends AbstractDBActor {
                 .match(SplitPartitionMsg.class, this::handleSplitPartition)
                 .match(SplitInsertMsg.class, this::handleSplitInsert)
                 .match(PartialSplitSuccessMsg.class, this::handlePartialSplitSuccess)
-
-                // Replicating
-                .match(ReplicateMsg.class, this::handleReplicate)
-                .match(ReplicateAckMsg.class, this::handleReplicateAck)
-                .match(UpdateReplicasMsg.class, this::handleUpdateReplicas)
 
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
@@ -104,7 +100,7 @@ public class Partition extends AbstractDBActor {
         if (isFull) {
             // Can't insert new rows while the partition is being split
             BlockedRow blockedRow = new BlockedRow(msg.getRow(), msg.getTransaction());
-            getSender().tell(new PartitionBlockedMsg(blockedRow), getSelf());
+            table.tell(new PartitionBlockedMsg(blockedRow), getSelf());
             return;
         }
 
@@ -112,8 +108,6 @@ public class Partition extends AbstractDBActor {
 
         rows.add(msg.getRow());
         log.debug("(TID: {}) Added row: {}", msg.getTransactionId(), msg.getRow());
-
-        broadcastToReplicasWithRetry(new ReplicateMsg(msg.getRow(), msg.getTransaction()));
 
         if (rows.size() == CAPACITY) {
             isFull = true;
@@ -126,10 +120,10 @@ public class Partition extends AbstractDBActor {
             // We want to cover all values up to the lowest in the new partition
             range = Range.closed(range.lowerEndpoint(), lowestInNewPartition - 1);
 
-            getSender().tell(new PartitionFullMsg(newRange), getSelf());
+            table.tell(new PartitionFullMsg(newRange), getSelf());
         }
 
-        msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
+        getSender().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
     }
 
     private void handleSplitPartition(SplitPartitionMsg msg) {
@@ -149,50 +143,6 @@ public class Partition extends AbstractDBActor {
         rows = new ArrayList<>(rows.subList(0, CAPACITY / 2));
         isFull = false;
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
-    }
-
-    private void handleReplicate(ReplicateMsg msg) {
-        if (seenTransaction(msg)) return;
-
-//        assert rows.size() < capacity;
-        rows.add(msg.getRow());
-        log.debug("(TID: {}) Replicated row: {}", msg.getTransactionId(), msg.getRow());
-        getSender().tell(new ReplicateAckMsg(msg.getTransaction()), getSelf());
-    }
-
-    private void handleUpdateReplicas(UpdateReplicasMsg msg) {
-        replicas = msg.getReplicas();
-    }
-
-    private void handleReplicateAck(ReplicateAckMsg msg) {
-        Map<ActorRef, Cancellable> acks = openTransactionAcks.get(msg.getTransactionId());
-        if (acks == null) {
-            return;
-        }
-
-        Cancellable cancellable = acks.remove(getSender());
-        if (cancellable != null) {
-            cancellable.cancel();
-        }
-
-        if (acks.isEmpty()) {
-            openTransactionAcks.remove(msg.getTransactionId());
-            log.debug("Completed replication for transaction #{}", msg.getTransactionId());
-        }
-    }
-
-    private <MsgType extends TransactionMsg> void broadcastToReplicasWithRetry(MsgType msg) {
-        long transactionId = msg.getTransactionId();
-        Map<ActorRef, Cancellable> acks = new TreeMap<>();
-        openTransactionAcks.put(transactionId, acks);
-
-        ActorSystem system = getContext().getSystem();
-        Scheduler scheduler = system.scheduler();
-
-        for (ActorRef replica : replicas) {
-            Cancellable c = scheduler.schedule(Duration.ZERO, Duration.ofSeconds(10), replica, msg, system.dispatcher(), getSelf());
-            acks.put(replica, c);
-        }
     }
 
     private boolean seenTransaction(TransactionMsg msg) {

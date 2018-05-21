@@ -5,7 +5,7 @@ import model.Transaction;
 
 import java.util.List;
 
-public class QueryResultMsg extends TransactionMsg {
+public class QueryResultMsg extends QueryResponseMsg {
 
     private List<Row> result;
 
