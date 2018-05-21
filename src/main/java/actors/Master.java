@@ -8,7 +8,6 @@ import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.InsertRowMsg;
 import messages.query.QueryErrorMsg;
-import messages.query.QueryResponseMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
@@ -51,11 +50,12 @@ public class Master extends AbstractDBActor {
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()), getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()),
+                    getSelf());
             return;
         }
 
-        String actorName = "table-" + tableName + "_" + (int)(Math.random() * 100);
+        String actorName = "table-" + tableName + "_" + (int) (Math.random() * 100);
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
         log.info("Created actor: " + actorName);
@@ -69,7 +69,8 @@ public class Master extends AbstractDBActor {
 
         ActorRef table = tables.remove(tableName);
         if (table == null) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()), getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()),
+                    getSelf());
             return;
         }
 
@@ -89,8 +90,8 @@ public class Master extends AbstractDBActor {
     private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
         ActorRef table = tables.get(tableName);
         if (table == null) {
-            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction
-                    ()), getSender());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction()),
+                    getSender());
             return Optional.empty();
         } else {
             return Optional.of(table);

@@ -1,10 +1,7 @@
 package actors;
 
 import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Cancellable;
 import akka.actor.Props;
-import akka.actor.Scheduler;
 import com.google.common.collect.Range;
 import messages.partition.PartialSplitSuccessMsg;
 import messages.partition.PartitionBlockedMsg;
@@ -18,21 +15,14 @@ import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
 import messages.query.TransactionMsg;
-import messages.replication.ReplicateAckMsg;
-import messages.replication.ReplicateMsg;
-import messages.replication.UpdateReplicasMsg;
 import model.BlockedRow;
 import model.Row;
 import utils.FIFOCache;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
