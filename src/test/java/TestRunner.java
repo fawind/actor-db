@@ -27,6 +27,7 @@ public class TestRunner {
     public void tearDown() throws Exception {
         Thread.sleep(500);
         store.close();
+        Thread.sleep(500);
     }
 
     @Test

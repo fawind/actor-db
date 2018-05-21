@@ -18,7 +18,6 @@ import messages.query.QueryResultMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
-import messages.replication.UpdateReplicasMsg;
 import model.BlockedRow;
 import model.Row;
 
@@ -31,10 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Table extends AbstractDBActor {
-
-    // How many partitions should hold the same info. Factor e.g. 3 equals 1 leader partition and 2 replica
-    private final int PARTITION_REPLICATION_FACTOR = 2;
-
     private final List<String> layout;
 
     // Map of Rows that could not be inserted to a partition because of ongoing splitting
@@ -43,12 +38,11 @@ public class Table extends AbstractDBActor {
     // Maps of current transactions (by ID) to the actors which have not responded and to the accumulated result
     private final Map<Long, Set<ActorRef>> runningTransactions;
     private final Multimap<Long, Row> runningTransactionResults;
+    private final Map<Long, ActorRef> transactionQuorumManagers;
 
     // Map of all leading partitions and the key ranges they each cover
-    private final RangeMap<Long, ActorRef> leaderPartitions = TreeRangeMap.create();
+    private final RangeMap<Long, ActorRef> partitions = TreeRangeMap.create();
 
-    // List of all partitions, including all replicas
-    private final List<ActorRef> allPartitions = new ArrayList<>();
 
     // Counter to give unique ids to each partition
     private int highestPartitionId = 1;
@@ -59,9 +53,10 @@ public class Table extends AbstractDBActor {
         blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
         runningTransactions = new HashMap<>();
         runningTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
+        transactionQuorumManagers = new HashMap<>();
 
         Range<Long> startRange = Range.closed(Long.MIN_VALUE, Long.MAX_VALUE);
-        createLeaderPartition(startRange);
+        createPartition(startRange);
     }
 
     public static Props props(List<String> layout) {
@@ -89,21 +84,21 @@ public class Table extends AbstractDBActor {
 
     private void handleSelectAll(SelectAllMsg msg) {
         startTransaction(msg.getTransactionId());
-        broadcastToLeaders(msg);
+        broadcastToPartitions(msg);
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
         startTransaction(msg.getTransactionId());
-        broadcastToLeaders(msg);
+        broadcastToPartitions(msg);
     }
 
     private void handleInsert(InsertRowMsg msg) {
         if (msg.getRow().getValues().size() != layout.size()) {
-            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got" +
-                    " " + msg.getRow().getValues().size(), msg.getTransaction()), getSelf());
+            getSender().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got " +
+                    msg.getRow().getValues().size(), msg.getTransaction()), getSelf());
         }
-        ActorRef partition = leaderPartitions.get(msg.getRow().getHashKey());
-        partition.tell(msg, getSelf());
+        ActorRef partition = partitions.get(msg.getRow().getHashKey());
+        partition.tell(msg, getSender());
     }
 
     private void handlePartialQueryResult(PartialQueryResultMsg msg) {
@@ -112,15 +107,16 @@ public class Table extends AbstractDBActor {
         runningTransactionResults.putAll(transactionId, msg.getResult());
         updateTransaction(transactionId, getSender());
 
-        if (isTransactionDone(transactionId)) {
-            finishTransaction(transactionId);
-            List<Row> result = new ArrayList<>(runningTransactionResults.get(transactionId));
-            msg.getRequester().tell(new QueryResultMsg(result, msg.getTransaction()), getSelf());
-        }
+        if (!isTransactionDone(transactionId)) return;
+
+        List<Row> result = new ArrayList<>(runningTransactionResults.get(transactionId));
+        ActorRef quorumManager = transactionQuorumManagers.get(transactionId);
+        quorumManager.tell(new QueryResultMsg(result, msg.getTransaction()), getSelf());
+        finishTransaction(transactionId);
     }
 
     private void handlePartitionFull(PartitionFullMsg msg) {
-        ActorRef newPartition = createLeaderPartition(msg.getNewRange());
+        ActorRef newPartition = createPartition(msg.getNewRange());
         getSender().tell(new SplitPartitionMsg(newPartition), getSelf());
     }
 
@@ -129,15 +125,15 @@ public class Table extends AbstractDBActor {
     }
 
     private void handleSplitSuccess(SplitSuccessMsg msg) {
-        Range<Long> oldRange = leaderPartitions.getEntry(msg.getOldRange().lowerEndpoint()).getKey();
-        leaderPartitions.remove(oldRange);
+        Range<Long> oldRange = partitions.getEntry(msg.getOldRange().lowerEndpoint()).getKey();
+        partitions.remove(oldRange);
 
-        leaderPartitions.put(msg.getOldRange(), msg.getOldPartition());
-        leaderPartitions.put(msg.getNewRange(), msg.getNewPartition());
+        partitions.put(msg.getOldRange(), msg.getOldPartition());
+        partitions.put(msg.getNewRange(), msg.getNewPartition());
 
         Collection<BlockedRow> blockedRows = this.blockedRows.get(msg.getOldPartition());
         for (BlockedRow blockedRow : blockedRows) {
-            ActorRef partition = leaderPartitions.get(blockedRow.getRow().getHashKey());
+            ActorRef partition = partitions.get(blockedRow.getRow().getHashKey());
             partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getTransaction()), getSelf());
         }
 
@@ -150,6 +146,7 @@ public class Table extends AbstractDBActor {
 
     private void startTransaction(long transactionId) {
         runningTransactions.put(transactionId, createCurrentPartitionSet());
+        transactionQuorumManagers.put(transactionId, getSender());
     }
 
     private void updateTransaction(long transactionId, ActorRef actor) {
@@ -168,49 +165,29 @@ public class Table extends AbstractDBActor {
 
     private void finishTransaction(long transactionId) {
         runningTransactions.remove(transactionId);
+        runningTransactionResults.removeAll(transactionId);
+        transactionQuorumManagers.remove(transactionId);
     }
 
-    private ActorRef createLeaderPartition(Range<Long> range) {
+    private ActorRef createPartition(Range<Long> range) {
         int partitionId = getNextPartitionId();
         log.debug("Created new leader partition #{} with range: {}", partitionId, range);
         ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-" +
                 partitionId);
 
-        leaderPartitions.put(range, partition);
-        allPartitions.add(partition);
-
-        List<ActorRef> replicas = createReplicas(range);
-        allPartitions.addAll(replicas);
-
-        partition.tell(new UpdateReplicasMsg(replicas), getSelf());
-
+        partitions.put(range, partition);
         return partition;
-    }
-
-    private List<ActorRef> createReplicas(Range<Long> range) {
-        List<ActorRef> replicas = new ArrayList<>(PARTITION_REPLICATION_FACTOR);
-
-        // The first one is the leader partition, so we start at index 1
-        for (int i = 1; i < PARTITION_REPLICATION_FACTOR; i++) {
-            int partitionId = getNextPartitionId();
-            log.debug("Created new replica partition #{} for range: {}", partitionId, range);
-            ActorRef partition = getContext().actorOf(Partition.props(partitionId, range, getSelf()), "partition-" +
-                    partitionId);
-            replicas.add(partition);
-        }
-
-        return replicas;
     }
 
     private int getNextPartitionId() {
         return highestPartitionId++;
     }
 
-    private <MsgType> void broadcastToLeaders(MsgType msg) {
-        leaderPartitions.asMapOfRanges().forEach((range, partition) -> partition.tell(msg, getSelf()));
+    private <MsgType> void broadcastToPartitions(MsgType msg) {
+        partitions.asMapOfRanges().forEach((range, partition) -> partition.tell(msg, getSelf()));
     }
 
     private Set<ActorRef> createCurrentPartitionSet() {
-        return new HashSet<>(leaderPartitions.asMapOfRanges().values());
+        return new HashSet<>(partitions.asMapOfRanges().values());
     }
 }

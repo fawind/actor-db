@@ -23,7 +23,7 @@ public abstract class AbstractDBActor extends AbstractLoggingActor {
     @Override
     public void preStart() throws Exception {
         super.preStart();
-        cluster.subscribe(getSelf(), ClusterEvent.MemberEvent.class);
+//        cluster.subscribe(getSelf(), ClusterEvent.MemberEvent.class);
     }
 
     protected ReceiveBuilder getClusterAwareReceiveBuilder() {

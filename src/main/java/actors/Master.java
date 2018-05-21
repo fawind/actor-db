@@ -8,6 +8,7 @@ import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.InsertRowMsg;
 import messages.query.QueryErrorMsg;
+import messages.query.QueryResponseMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
@@ -23,7 +24,7 @@ public class Master extends AbstractDBActor {
     private final Map<String, ActorRef> tables;
 
     private Master() {
-        this.tables = new HashMap<>();
+        tables = new HashMap<>();
     }
 
     public static Props props() {
@@ -44,25 +45,23 @@ public class Master extends AbstractDBActor {
 
     private void handleInsert(InsertMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getTransaction()), getSelf()));
+        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getTransaction()), getSender()));
     }
 
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction
-                            ()),
-                    getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()), getSelf());
             return;
         }
 
-        String actorName = "table-" + tableName;
+        String actorName = "table-" + tableName + "_" + (int)(Math.random() * 100);
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
-        log.info("Created actors: " + actorName);
+        log.info("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
-        msg.getRequester().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
+        getSender().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
     }
 
     private void handleDropTable(DropTableMsg msg) {
@@ -70,7 +69,7 @@ public class Master extends AbstractDBActor {
 
         ActorRef table = tables.remove(tableName);
         if (table == null) {
-            msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()), getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()), getSelf());
             return;
         }
 
@@ -79,19 +78,19 @@ public class Master extends AbstractDBActor {
 
     private void handleSelectAll(SelectAllMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(msg, msg.getRequester()));
+        table.ifPresent(t -> t.tell(msg, getSender()));
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(msg, msg.getRequester()));
+        table.ifPresent(t -> t.tell(msg, getSender()));
     }
 
     private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
         ActorRef table = tables.get(tableName);
         if (table == null) {
             msg.getRequester().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction
-                    ()), getSelf());
+                    ()), getSender());
             return Optional.empty();
         } else {
             return Optional.of(table);

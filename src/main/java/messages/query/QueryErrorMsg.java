@@ -2,7 +2,7 @@ package messages.query;
 
 import model.Transaction;
 
-public final class QueryErrorMsg extends TransactionMsg {
+public final class QueryErrorMsg extends QueryResponseMsg {
 
     private String msg;
 
