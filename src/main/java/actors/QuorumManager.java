@@ -17,15 +17,9 @@ import java.util.Set;
  * This class deals with all quorum-related matters. It is aware of all master nodes in the network.
  */
 public class QuorumManager extends AbstractDBActor {
+
     private static final int READ_QUORUM = 2;
     private static final int WRITE_QUORUM = 2;
-    private final Set<ActorRef> masters;
-    private final Map<Long, List<QueryResponseMsg>> quorumResponses;
-
-    private QuorumManager(Set<ActorRef> masters) {
-        this.masters = masters;
-        quorumResponses = new HashMap<>();
-    }
 
     public static Props props() {
         return props(new HashSet<>());
@@ -33,6 +27,14 @@ public class QuorumManager extends AbstractDBActor {
 
     public static Props props(Set<ActorRef> masters) {
         return Props.create(QuorumManager.class, () -> new QuorumManager(masters));
+    }
+
+    private final Set<ActorRef> masters;
+    private final Map<Long, List<QueryResponseMsg>> quorumResponses;
+
+    private QuorumManager(Set<ActorRef> masters) {
+        this.masters = masters;
+        quorumResponses = new HashMap<>();
     }
 
     @Override
