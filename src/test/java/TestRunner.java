@@ -1,3 +1,4 @@
+import com.google.common.collect.ImmutableList;
 import configuration.DatastoreModule;
 import core.Datastore;
 import model.Row;
@@ -9,18 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestRunner {
+
+    private static final List<String> defaultLayout = ImmutableList.of("int", "string", "int");
+
     private Datastore store;
     private String tableName = "foo";
-    private List<String> defaultLayout = new ArrayList<>();
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         store = DatastoreModule.createInstance();
         store.startWithCustomClientActor(TestClientActor.props(), "TestClient");
-
-        defaultLayout.add("int");
-        defaultLayout.add("string");
-        defaultLayout.add("int");
+        Thread.sleep(3000);
     }
 
     @After
@@ -55,7 +55,6 @@ public class TestRunner {
         for (int i = 0; i <= 100; ++i) {
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
         }
-
         store.selectAllFrom(tableName);
     }
 
@@ -84,7 +83,6 @@ public class TestRunner {
         for (int i = 0; i <= 10; ++i) {
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
         }
-
         store.dropTable(tableName);
     }
 }

@@ -5,6 +5,7 @@ import cli.commands.CreateTableCommand;
 import cli.commands.InsertIntoCommand;
 import cli.commands.SelectAllCommand;
 import configuration.DatastoreModule;
+import configuration.EnvConfig;
 import core.Datastore;
 import model.Row;
 import org.jline.reader.EndOfFileException;
