@@ -91,7 +91,7 @@ public class Master extends AbstractDBActor {
         ActorRef table = tables.get(tableName);
         if (table == null) {
             getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction()),
-                    getSender());
+                    getSelf());
             return Optional.empty();
         } else {
             return Optional.of(table);
