@@ -18,9 +18,7 @@ import model.Transaction;
 import model.WriteTransaction;
 
 import javax.inject.Inject;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
@@ -48,13 +46,8 @@ public class Datastore implements AutoCloseable {
     public ActorRef startWithCustomClientActor(Props props, String name) {
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         clientActor = actorSystem.actorOf(props, name);
-
-        Set<ActorRef> masters = new HashSet<>();
-        masters.add(actorSystem.actorOf(Master.props(), Master.ACTOR_NAME + "_1"));
-        masters.add(actorSystem.actorOf(Master.props(), Master.ACTOR_NAME + "_2"));
-        masters.add(actorSystem.actorOf(Master.props(), Master.ACTOR_NAME + "_3"));
-
-        quorumManager = actorSystem.actorOf(QuorumManager.props(masters));
+        quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
+        actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
 
         nextTransactionId = new AtomicLong();
         return clientActor;

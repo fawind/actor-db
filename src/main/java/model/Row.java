@@ -69,4 +69,11 @@ public class Row implements Comparable<Row>, Serializable {
     public int hashCode() {
         return Objects.hash(hashKey, values);
     }
+
+    @Override
+    public String toString() {
+        return "Row{" +
+                "values=" + values +
+                '}';
+    }
 }

@@ -8,33 +8,29 @@ import model.WriteTransaction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class deals with all quorum-related matters. It is aware of all master nodes in the network.
  */
 public class QuorumManager extends AbstractDBActor {
 
+    public static final String ACTOR_NAME = "quorum-manager";
     private static final int READ_QUORUM = 2;
     private static final int WRITE_QUORUM = 2;
 
     public static Props props() {
-        return props(new HashSet<>());
+        return Props.create(QuorumManager.class, QuorumManager::new);
     }
 
-    public static Props props(Set<ActorRef> masters) {
-        return Props.create(QuorumManager.class, () -> new QuorumManager(masters));
-    }
-
-    private final Set<ActorRef> masters;
+    private final ClusterMemberRegistry memberRegistry;
     private final Map<Long, List<QueryResponseMsg>> quorumResponses;
 
-    private QuorumManager(Set<ActorRef> masters) {
-        this.masters = masters;
+    private QuorumManager() {
+        memberRegistry = new ClusterMemberRegistry();
         quorumResponses = new HashMap<>();
+        getContext().actorOf(ClusterMemberListener.props(memberRegistry), ClusterMemberListener.ACTOR_NAME);
     }
 
     @Override
@@ -74,8 +70,8 @@ public class QuorumManager extends AbstractDBActor {
             quorumResponses.put(msg.getTransactionId(), responses);
             return;
         }
-
-        masters.forEach(master -> master.tell(msg, getSelf()));
+        memberRegistry.getMasters()
+                .forEach(actorPath -> getContext().actorFor(actorPath).tell(msg, getSelf()));
     }
 
     private QueryResponseMsg getQuorumResponse(List<QueryResponseMsg> messages) {
