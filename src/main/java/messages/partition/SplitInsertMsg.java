@@ -1,22 +1,22 @@
 package messages.partition;
 
-import model.Row;
+import model.StoredRow;
 
 import java.io.Serializable;
 import java.util.List;
 
 public class SplitInsertMsg implements Serializable {
 
-    private List<Row> rows;
+    private List<StoredRow> rows;
 
     // Used for serialization
     private SplitInsertMsg() {}
 
-    public SplitInsertMsg(List<Row> rows) {
+    public SplitInsertMsg(List<StoredRow> rows) {
         this.rows = rows;
     }
 
-    public List<Row> getRows() {
+    public List<StoredRow> getRows() {
         return rows;
     }
 }

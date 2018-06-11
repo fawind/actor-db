@@ -5,21 +5,21 @@ import java.io.Serializable;
 public class BlockedRow implements Serializable {
 
     private Row row;
-    private Transaction transaction;
+    private LamportQuery lamportQuery;
 
     // Used for serialization
     private BlockedRow() {}
 
-    public BlockedRow(Row row, Transaction transaction) {
+    public BlockedRow(Row row, LamportQuery lamportQuery) {
         this.row = row;
-        this.transaction = transaction;
+        this.lamportQuery = lamportQuery;
     }
 
     public Row getRow() {
         return row;
     }
 
-    public Transaction getTransaction() {
-        return transaction;
+    public LamportQuery getLamportQuery() {
+        return lamportQuery;
     }
 }

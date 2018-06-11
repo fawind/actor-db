@@ -1,9 +1,9 @@
 package messages.query;
 
+import model.LamportQuery;
 import model.Row;
-import model.Transaction;
 
-public class InsertMsg extends TransactionMsg {
+public class InsertMsg extends LamportQueryMsg {
 
     private String tableName;
     private Row row;
@@ -11,8 +11,8 @@ public class InsertMsg extends TransactionMsg {
     // Used for serialization
     private InsertMsg() {}
 
-    public InsertMsg(String tableName, Row row, Transaction transaction) {
-        super(transaction);
+    public InsertMsg(String tableName, Row row, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.tableName = tableName;
         this.row = row;
     }

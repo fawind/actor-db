@@ -3,9 +3,7 @@ package configuration;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.PrivateModule;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import core.Datastore;
@@ -13,6 +11,11 @@ import core.Datastore;
 public class DatastoreModule extends AbstractModule {
 
     private static final String AKKA_REMOTE_CONFIG = "akka.conf";
+    private final EnvConfig envConfig;
+
+    public DatastoreModule(EnvConfig envConfig) {
+        this.envConfig = envConfig;
+    }
 
     public static Datastore createInstance() {
         return DatastoreModule.createInstance(EnvConfig.withDefaults());
@@ -21,12 +24,6 @@ public class DatastoreModule extends AbstractModule {
     public static Datastore createInstance(EnvConfig envConfig) {
         Injector injector = Guice.createInjector(new DatastoreModule(envConfig));
         return injector.getInstance(Datastore.class);
-    }
-
-    private final EnvConfig envConfig;
-
-    public DatastoreModule(EnvConfig envConfig) {
-        this.envConfig = envConfig;
     }
 
     @Override

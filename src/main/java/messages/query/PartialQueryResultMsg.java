@@ -1,29 +1,23 @@
 package messages.query;
 
-import model.Row;
-import model.Transaction;
+import model.LamportQuery;
+import model.StoredRow;
 
 import java.util.List;
 
-public class PartialQueryResultMsg extends TransactionMsg {
+public class PartialQueryResultMsg extends QueryResponseMsg {
 
-    private List<Row> result;
-    private int actorId;
+    private List<StoredRow> result;
 
     // Used for serialization
     private PartialQueryResultMsg() {}
 
-    public PartialQueryResultMsg(List<Row> result, int actorId, Transaction transaction) {
-        super(transaction);
+    public PartialQueryResultMsg(List<StoredRow> result, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.result = result;
-        this.actorId = actorId;
     }
 
-    public List<Row> getResult() {
+    public List<StoredRow> getResult() {
         return result;
-    }
-
-    public int getActorId() {
-        return actorId;
     }
 }

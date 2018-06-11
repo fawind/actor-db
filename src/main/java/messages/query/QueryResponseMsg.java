@@ -1,11 +1,11 @@
 package messages.query;
 
-import model.Transaction;
+import model.LamportQuery;
 
-public class QueryResponseMsg extends TransactionMsg {
+public class QueryResponseMsg extends LamportQueryMsg {
     protected QueryResponseMsg() {}
 
-    public QueryResponseMsg(Transaction transaction) {
-        super(transaction);
+    public QueryResponseMsg(LamportQuery lamportQuery) {
+        super(lamportQuery);
     }
 }

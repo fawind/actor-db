@@ -13,16 +13,14 @@ import java.util.stream.Collectors;
 public class ClusterMemberListener extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "cluster-member-listener";
+    private final ClusterMemberRegistry memberRegistry;
+    private Cluster cluster = Cluster.get(getContext().getSystem());
+    public ClusterMemberListener(ClusterMemberRegistry memberRegistry) {
+        this.memberRegistry = memberRegistry;
+    }
 
     public static Props props(ClusterMemberRegistry memberRegistry) {
         return Props.create(ClusterMemberListener.class, () -> new ClusterMemberListener(memberRegistry));
-    }
-
-    private final ClusterMemberRegistry memberRegistry;
-    private Cluster cluster = Cluster.get(getContext().getSystem());
-
-    public ClusterMemberListener(ClusterMemberRegistry memberRegistry) {
-        this.memberRegistry = memberRegistry;
     }
 
     @Override

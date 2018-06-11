@@ -1,13 +1,13 @@
 package messages.query;
 
-import model.Transaction;
+import model.LamportQuery;
 
 public class QuerySuccessMsg extends QueryResponseMsg {
 
     // Used for serialization
     private QuerySuccessMsg() {}
 
-    public QuerySuccessMsg(Transaction transaction) {
-        super(transaction);
+    public QuerySuccessMsg(LamportQuery lamportQuery) {
+        super(lamportQuery);
     }
 }

@@ -1,6 +1,6 @@
 package messages.query;
 
-import model.Transaction;
+import model.LamportQuery;
 
 public final class QueryErrorMsg extends QueryResponseMsg {
 
@@ -9,8 +9,8 @@ public final class QueryErrorMsg extends QueryResponseMsg {
     // Used for serialization
     private QueryErrorMsg() {}
 
-    public QueryErrorMsg(String msg, Transaction transaction) {
-        super(transaction);
+    public QueryErrorMsg(String msg, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.msg = msg;
     }
 

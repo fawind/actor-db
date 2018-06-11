@@ -1,18 +1,18 @@
 package messages.replication;
 
-import messages.query.TransactionMsg;
+import messages.query.LamportQueryMsg;
+import model.LamportQuery;
 import model.Row;
-import model.Transaction;
 
-public class ReplicateMsg extends TransactionMsg {
+public class ReplicateMsg extends LamportQueryMsg {
 
     private Row row;
 
     // Used for serialization
     private ReplicateMsg() {}
 
-    public ReplicateMsg(Row row, Transaction transaction) {
-        super(transaction);
+    public ReplicateMsg(Row row, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.row = row;
     }
 

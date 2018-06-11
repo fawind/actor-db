@@ -1,7 +1,6 @@
 package configuration;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueFactory;
 import lombok.Builder;
 import lombok.Data;

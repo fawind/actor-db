@@ -1,11 +1,11 @@
 package messages.query;
 
+import model.LamportQuery;
 import model.Row;
-import model.Transaction;
 
 import java.util.function.Predicate;
 
-public class SelectWhereMsg extends TransactionMsg {
+public class SelectWhereMsg extends LamportQueryMsg {
 
     private String tableName;
     private Predicate<Row> whereFn;
@@ -13,8 +13,8 @@ public class SelectWhereMsg extends TransactionMsg {
     // Used for serialization
     private SelectWhereMsg() {}
 
-    public SelectWhereMsg(String tableName, Predicate<Row> whereFn, Transaction transaction) {
-        super(transaction);
+    public SelectWhereMsg(String tableName, Predicate<Row> whereFn, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.tableName = tableName;
         this.whereFn = whereFn;
     }

@@ -7,11 +7,11 @@ import messages.query.CreateTableMsg;
 import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.InsertRowMsg;
+import messages.query.LamportQueryMsg;
 import messages.query.QueryErrorMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
-import messages.query.TransactionMsg;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,13 +44,13 @@ public class Master extends AbstractDBActor {
 
     private void handleInsert(InsertMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getTransaction()), getSender()));
+        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getLamportQuery()), getSender()));
     }
 
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getTransaction()),
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getLamportQuery()),
                     getSelf());
             return;
         }
@@ -58,10 +58,10 @@ public class Master extends AbstractDBActor {
         String actorName = "table-" + tableName + "_" + (int) (Math.random() * 100);
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
-        log.info("Created actor: " + actorName);
+        log.debug("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
-        getSender().tell(new QuerySuccessMsg(msg.getTransaction()), getSelf());
+        getSender().tell(new QuerySuccessMsg(msg.getLamportQuery()), getSelf());
     }
 
     private void handleDropTable(DropTableMsg msg) {
@@ -69,7 +69,7 @@ public class Master extends AbstractDBActor {
 
         ActorRef table = tables.remove(tableName);
         if (table == null) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getTransaction()),
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getLamportQuery()),
                     getSelf());
             return;
         }
@@ -87,10 +87,10 @@ public class Master extends AbstractDBActor {
         table.ifPresent(t -> t.tell(msg, getSender()));
     }
 
-    private Optional<ActorRef> assertTableExists(String tableName, TransactionMsg msg) {
+    private Optional<ActorRef> assertTableExists(String tableName, LamportQueryMsg msg) {
         ActorRef table = tables.get(tableName);
         if (table == null) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getTransaction()),
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getLamportQuery()),
                     getSelf());
             return Optional.empty();
         } else {
