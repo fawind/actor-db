@@ -1,16 +1,16 @@
 package messages.query;
 
-import model.Transaction;
+import model.LamportQuery;
 
-public class SelectAllMsg extends TransactionMsg {
+public class SelectAllMsg extends LamportQueryMsg {
 
     private String tableName;
 
     // Used for serialization
     private SelectAllMsg() {}
 
-    public SelectAllMsg(String tableName, Transaction transaction) {
-        super(transaction);
+    public SelectAllMsg(String tableName, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.tableName = tableName;
     }
 

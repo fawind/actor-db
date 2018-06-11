@@ -2,6 +2,7 @@ import com.google.common.collect.ImmutableList;
 import configuration.DatastoreModule;
 import configuration.EnvConfig;
 import core.Datastore;
+import model.LamportId;
 import model.Row;
 import org.junit.After;
 import org.junit.Before;
@@ -14,8 +15,9 @@ import static java.lang.String.format;
 
 public class TestMultiNodeSetup {
 
-    private final List<Integer> ports = ImmutableList.of(2552, 2553);
     private static final List<String> defaultLayout = ImmutableList.of("int", "string", "int");
+    private final List<Integer> ports = ImmutableList.of(2552, 2553);
+    private final LamportId defaultLamportId = new LamportId(0, 1);
     private List<Datastore> datastores;
 
     @Before
@@ -38,13 +40,15 @@ public class TestMultiNodeSetup {
 
     @Test
     public void testNodeFinding() {
+        LamportId id = defaultLamportId;
         Datastore store = datastores.get(0);
-        store.createTable("foo", defaultLayout);
+        store.createTable("foo", defaultLayout, id);
 
         for (int i = 0; i < 2; ++i) {
-            store.insertInto("foo", new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto("foo", new Row(String.valueOf(i), "abc", "23"), id);
         }
 
-        store.selectAllFrom("foo");
+        store.selectAllFrom("foo", id.increment());
     }
 }

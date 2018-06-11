@@ -1,19 +1,19 @@
 package messages.quorum;
 
-import messages.query.TransactionMsg;
+import messages.query.LamportQueryMsg;
 
 import java.io.Serializable;
 
 public class QuorumMsg implements Serializable {
-    private TransactionMsg transactionMsg;
+    private LamportQueryMsg lamportQueryMsg;
 
     public QuorumMsg() {}
 
-    public QuorumMsg(TransactionMsg transactionMsg) {
-        this.transactionMsg = transactionMsg;
+    public QuorumMsg(LamportQueryMsg lamportQueryMsg) {
+        this.lamportQueryMsg = lamportQueryMsg;
     }
 
-    public TransactionMsg getTransactionMsg() {
-        return transactionMsg;
+    public LamportQueryMsg getLamportQueryMsg() {
+        return lamportQueryMsg;
     }
 }

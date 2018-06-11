@@ -1,18 +1,18 @@
 import com.google.common.collect.ImmutableList;
 import configuration.DatastoreModule;
 import core.Datastore;
+import model.LamportId;
 import model.Row;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TestRunner {
 
     private static final List<String> defaultLayout = ImmutableList.of("int", "string", "int");
-
+    private final LamportId defaultLamportId = new LamportId(0, 1);
     private Datastore store;
     private String tableName = "foo";
 
@@ -32,57 +32,67 @@ public class TestRunner {
 
     @Test
     public void testCreateTable() {
-        store.createTable(tableName, defaultLayout);
+        store.createTable(tableName, defaultLayout, defaultLamportId);
     }
 
     @Test
     public void testCreateDuplicateTable() {
-        store.createTable(tableName, defaultLayout);
-        store.createTable(tableName, defaultLayout);
+        store.createTable(tableName, defaultLayout, defaultLamportId);
+        store.createTable(tableName, defaultLayout, defaultLamportId);
     }
 
     @Test
     public void testPartitioning() {
-        store.createTable(tableName, defaultLayout);
+        LamportId id = defaultLamportId;
+        store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
     }
 
     @Test
     public void testSelectAll() {
-        store.createTable(tableName, defaultLayout);
+        LamportId id = defaultLamportId;
+        store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
-        store.selectAllFrom(tableName);
+        store.selectAllFrom(tableName, id.increment());
     }
 
     @Test
     public void testSelectWhere() {
-        store.createTable(tableName, defaultLayout);
+        LamportId id = defaultLamportId;
+        store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
 
-        store.selectFromWhere(tableName, row -> row.getKey().equals("13"));
+        store.selectFromWhere(tableName, row -> row.getKey().equals("13"), id.increment());
     }
 
     @Test
     public void testPartitioningLarge() {
-        store.createTable(tableName, defaultLayout);
+        LamportId id = defaultLamportId;
+        store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 1000; ++i) {
-            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
     }
 
 
     @Test
     public void testDropTable() {
-        store.createTable(tableName, defaultLayout);
+        LamportId id = defaultLamportId;
+        store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 10; ++i) {
-            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"));
+            id = id.increment();
+            store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
-        store.dropTable(tableName);
+        store.dropTable(tableName, id.increment());
     }
 }

@@ -1,7 +1,7 @@
 package messages.query;
 
+import model.LamportQuery;
 import model.Row;
-import model.Transaction;
 
 import java.util.List;
 
@@ -12,8 +12,8 @@ public class QueryResultMsg extends QueryResponseMsg {
     // Used for serialization
     private QueryResultMsg() {}
 
-    public QueryResultMsg(List<Row> result, Transaction transaction) {
-        super(transaction);
+    public QueryResultMsg(List<Row> result, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.result = result;
     }
 

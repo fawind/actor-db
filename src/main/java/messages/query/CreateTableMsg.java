@@ -1,18 +1,18 @@
 package messages.query;
 
-import model.Transaction;
+import model.LamportQuery;
 
 import java.util.List;
 
-public final class CreateTableMsg extends TransactionMsg {
+public final class CreateTableMsg extends LamportQueryMsg {
 
     private String tableName;
     private List<String> layout;
 
     private CreateTableMsg() {}
 
-    public CreateTableMsg(String tableName, List<String> layout, Transaction transaction) {
-        super(transaction);
+    public CreateTableMsg(String tableName, List<String> layout, LamportQuery lamportQuery) {
+        super(lamportQuery);
         this.tableName = tableName;
         this.layout = layout;
     }

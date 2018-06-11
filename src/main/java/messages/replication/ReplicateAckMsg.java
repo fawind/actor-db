@@ -1,14 +1,14 @@
 package messages.replication;
 
-import messages.query.TransactionMsg;
-import model.Transaction;
+import messages.query.LamportQueryMsg;
+import model.LamportQuery;
 
-public class ReplicateAckMsg extends TransactionMsg {
+public class ReplicateAckMsg extends LamportQueryMsg {
 
     // Used for serialization
     private ReplicateAckMsg() {}
 
-    public ReplicateAckMsg(Transaction transaction) {
-        super(transaction);
+    public ReplicateAckMsg(LamportQuery lamportQuery) {
+        super(lamportQuery);
     }
 }

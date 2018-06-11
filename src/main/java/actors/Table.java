@@ -14,12 +14,12 @@ import messages.partition.SplitSuccessMsg;
 import messages.query.InsertRowMsg;
 import messages.query.PartialQueryResultMsg;
 import messages.query.QueryErrorMsg;
-import messages.query.QueryResultMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
 import model.BlockedRow;
-import model.Row;
+import model.LamportId;
+import model.StoredRow;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,9 +36,9 @@ public class Table extends AbstractDBActor {
     private final Multimap<ActorRef, BlockedRow> blockedRows;
 
     // Maps of current transactions (by ID) to the actors which have not responded and to the accumulated result
-    private final Map<Long, Set<ActorRef>> runningTransactions;
-    private final Multimap<Long, Row> runningTransactionResults;
-    private final Map<Long, ActorRef> transactionQuorumManagers;
+    private final Map<LamportId, Set<ActorRef>> runningQueries;
+    private final Multimap<LamportId, StoredRow> runningQueryResults;
+    private final Map<LamportId, ActorRef> queryQuorumManagers;
 
     // Map of all leading partitions and the key ranges they each cover
     private final RangeMap<Long, ActorRef> partitions = TreeRangeMap.create();
@@ -51,9 +51,9 @@ public class Table extends AbstractDBActor {
         this.layout = layout;
 
         blockedRows = MultimapBuilder.hashKeys().arrayListValues().build();
-        runningTransactions = new HashMap<>();
-        runningTransactionResults = MultimapBuilder.hashKeys().arrayListValues().build();
-        transactionQuorumManagers = new HashMap<>();
+        runningQueries = new HashMap<>();
+        runningQueryResults = MultimapBuilder.hashKeys().arrayListValues().build();
+        queryQuorumManagers = new HashMap<>();
 
         Range<Long> startRange = Range.closed(Long.MIN_VALUE, Long.MAX_VALUE);
         createPartition(startRange);
@@ -83,36 +83,37 @@ public class Table extends AbstractDBActor {
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
-        startTransaction(msg.getTransactionId());
+        startTransaction(msg.getLamportId());
         broadcastToPartitions(msg);
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
-        startTransaction(msg.getTransactionId());
+        startTransaction(msg.getLamportId());
         broadcastToPartitions(msg);
     }
 
     private void handleInsert(InsertRowMsg msg) {
         if (msg.getRow().getValues().size() != layout.size()) {
             getSender().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got " +
-                    msg.getRow().getValues().size(), msg.getTransaction()), getSelf());
+                    msg.getRow().getValues().size(), msg.getLamportQuery()), getSelf());
         }
         ActorRef partition = partitions.get(msg.getRow().getHashKey());
         partition.tell(msg, getSender());
     }
 
     private void handlePartialQueryResult(PartialQueryResultMsg msg) {
-        long transactionId = msg.getTransactionId();
+        LamportId lamportId = msg.getLamportId();
 
-        runningTransactionResults.putAll(transactionId, msg.getResult());
-        updateTransaction(transactionId, getSender());
+        runningQueryResults.putAll(lamportId, msg.getResult());
+        updateTransaction(lamportId, getSender());
 
-        if (!isTransactionDone(transactionId)) return;
+        if (!isTransactionDone(lamportId)) return;
 
-        List<Row> result = new ArrayList<>(runningTransactionResults.get(transactionId));
-        ActorRef quorumManager = transactionQuorumManagers.get(transactionId);
-        quorumManager.tell(new QueryResultMsg(result, msg.getTransaction()), getSelf());
-        finishTransaction(transactionId);
+        List<StoredRow> result = new ArrayList<>(runningQueryResults.get(lamportId));
+        ActorRef quorumManager = queryQuorumManagers.get(lamportId);
+        log.debug("Telling QM: {}", lamportId);
+        quorumManager.tell(new PartialQueryResultMsg(result, msg.getLamportQuery()), getSelf());
+        finishTransaction(lamportId);
     }
 
     private void handlePartitionFull(PartitionFullMsg msg) {
@@ -134,7 +135,7 @@ public class Table extends AbstractDBActor {
         Collection<BlockedRow> blockedRows = this.blockedRows.get(msg.getOldPartition());
         for (BlockedRow blockedRow : blockedRows) {
             ActorRef partition = partitions.get(blockedRow.getRow().getHashKey());
-            partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getTransaction()), getSelf());
+            partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getLamportQuery()), getSelf());
         }
 
         blockedRows.clear();
@@ -144,29 +145,29 @@ public class Table extends AbstractDBActor {
         msg.getRequester().tell(msg, getSelf());
     }
 
-    private void startTransaction(long transactionId) {
-        runningTransactions.put(transactionId, createCurrentPartitionSet());
-        transactionQuorumManagers.put(transactionId, getSender());
+    private void startTransaction(LamportId lamportId) {
+        runningQueries.put(lamportId, createCurrentPartitionSet());
+        queryQuorumManagers.put(lamportId, getSender());
     }
 
-    private void updateTransaction(long transactionId, ActorRef actor) {
-        Set<ActorRef> partitionSet = runningTransactions.get(transactionId);
+    private void updateTransaction(LamportId lamportId, ActorRef actor) {
+        Set<ActorRef> partitionSet = runningQueries.get(lamportId);
         if (partitionSet == null) {
-            log.error("Cannot update transaction #{}. It is not present in list of transactions", transactionId);
+            log.error("Cannot update lamportQuery #{}. It is not present in list of transactions", lamportId);
             return;
         }
         partitionSet.remove(actor);
     }
 
-    private boolean isTransactionDone(long transactionId) {
-        Set<ActorRef> partitionSet = runningTransactions.get(transactionId);
+    private boolean isTransactionDone(LamportId lamportId) {
+        Set<ActorRef> partitionSet = runningQueries.get(lamportId);
         return partitionSet != null && partitionSet.isEmpty();
     }
 
-    private void finishTransaction(long transactionId) {
-        runningTransactions.remove(transactionId);
-        runningTransactionResults.removeAll(transactionId);
-        transactionQuorumManagers.remove(transactionId);
+    private void finishTransaction(LamportId lamportId) {
+        runningQueries.remove(lamportId);
+        runningQueryResults.removeAll(lamportId);
+        queryQuorumManagers.remove(lamportId);
     }
 
     private ActorRef createPartition(Range<Long> range) {

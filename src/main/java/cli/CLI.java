@@ -1,13 +1,7 @@
 package cli;
 
-import cli.commands.Command;
-import cli.commands.CreateTableCommand;
-import cli.commands.InsertIntoCommand;
-import cli.commands.SelectAllCommand;
 import configuration.DatastoreModule;
-import configuration.EnvConfig;
 import core.Datastore;
-import model.Row;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -51,27 +45,27 @@ public class CLI {
     }
 
     private void executeCommand(Datastore datastore, String message) {
-        if (message == null || message.length() == 0) {
-            return;
-        }
-        Command command = CommandParser.fromLine(message);
-        switch (command.getCommandType()) {
-            case CREATE_TABLE:
-                CreateTableCommand createCommand = (CreateTableCommand) command;
-                datastore.createTable(createCommand.getTableName(), createCommand.getSchema());
-                break;
-            case INSERT_INTO:
-                InsertIntoCommand insertCommand = (InsertIntoCommand) command;
-                datastore.insertInto(
-                        insertCommand.getTableName(),
-                        new Row(insertCommand.getValues().toArray(new String[insertCommand.getValues().size()])));
-                break;
-            case SELECT_ALL:
-                SelectAllCommand selectAllCommand = (SelectAllCommand) command;
-                datastore.selectAllFrom(selectAllCommand.getTableName());
-                break;
-            default:
-                break;
-        }
+//        if (message == null || message.length() == 0) {
+//            return;
+//        }
+//        Command command = CommandParser.fromLine(message);
+//        switch (command.getCommandType()) {
+//            case CREATE_TABLE:
+//                CreateTableCommand createCommand = (CreateTableCommand) command;
+//                datastore.createTable(createCommand.getTableName(), createCommand.getSchema());
+//                break;
+//            case INSERT_INTO:
+//                InsertIntoCommand insertCommand = (InsertIntoCommand) command;
+//                datastore.insertInto(
+//                        insertCommand.getTableName(),
+//                        new Row(insertCommand.getValues().toArray(new String[insertCommand.getValues().size()])));
+//                break;
+//            case SELECT_ALL:
+//                SelectAllCommand selectAllCommand = (SelectAllCommand) command;
+//                datastore.selectAllFrom(selectAllCommand.getTableName());
+//                break;
+//            default:
+//                break;
+//        }
     }
 }

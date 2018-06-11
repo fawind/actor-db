@@ -12,14 +12,14 @@ import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
-import model.ReadTransaction;
+import model.LamportId;
+import model.LamportQuery;
+import model.ReadLamportQuery;
 import model.Row;
-import model.Transaction;
-import model.WriteTransaction;
+import model.WriteLamportQuery;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 public class Datastore implements AutoCloseable {
@@ -31,8 +31,6 @@ public class Datastore implements AutoCloseable {
     private ActorSystem actorSystem;
     private ActorRef clientActor;
     private ActorRef quorumManager;
-
-    private AtomicLong nextTransactionId;
 
     @Inject
     public Datastore(DatastoreConfig config) {
@@ -49,28 +47,27 @@ public class Datastore implements AutoCloseable {
         quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
         actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
 
-        nextTransactionId = new AtomicLong();
         return clientActor;
     }
 
-    public void createTable(String tableName, List<String> schema) {
-        tellQuorumManger(new CreateTableMsg(tableName, schema, getNewWriteTransaction()));
+    public void createTable(String tableName, List<String> schema, LamportId lamportId) {
+        tellQuorumManger(new CreateTableMsg(tableName, schema, getNewWriteQuery(lamportId)));
     }
 
-    public void dropTable(String tableName) {
-        tellQuorumManger(new DropTableMsg(tableName, getNewWriteTransaction()));
+    public void dropTable(String tableName, LamportId lamportId) {
+        tellQuorumManger(new DropTableMsg(tableName, getNewWriteQuery(lamportId)));
     }
 
-    public void insertInto(String tableName, Row row) {
-        tellQuorumManger(new InsertMsg(tableName, row, getNewWriteTransaction()));
+    public void insertInto(String tableName, Row row, LamportId lamportId) {
+        tellQuorumManger(new InsertMsg(tableName, row, getNewWriteQuery(lamportId)));
     }
 
-    public void selectAllFrom(String tableName) {
-        tellQuorumManger(new SelectAllMsg(tableName, getNewReadTransaction()));
+    public void selectAllFrom(String tableName, LamportId lamportId) {
+        tellQuorumManger(new SelectAllMsg(tableName, getNewReadQuery(lamportId)));
     }
 
-    public void selectFromWhere(String tableName, Predicate<Row> whereFn) {
-        tellQuorumManger(new SelectWhereMsg(tableName, whereFn, getNewReadTransaction()));
+    public void selectFromWhere(String tableName, Predicate<Row> whereFn, LamportId lamportId) {
+        tellQuorumManger(new SelectWhereMsg(tableName, whereFn, getNewReadQuery(lamportId)));
     }
 
     @Override
@@ -82,11 +79,11 @@ public class Datastore implements AutoCloseable {
         quorumManager.tell(msg, ActorRef.noSender());
     }
 
-    private Transaction getNewReadTransaction() {
-        return new ReadTransaction(nextTransactionId.getAndIncrement(), clientActor);
+    private LamportQuery getNewReadQuery(LamportId lamportId) {
+        return new ReadLamportQuery(clientActor, lamportId);
     }
 
-    private Transaction getNewWriteTransaction() {
-        return new WriteTransaction(nextTransactionId.getAndIncrement(), clientActor);
+    private LamportQuery getNewWriteQuery(LamportId lamportId) {
+        return new WriteLamportQuery(clientActor, lamportId);
     }
 }
