@@ -53,7 +53,6 @@ public class QuorumManager extends AbstractDBActor {
 
     private void handleQuorumResponse(QueryResponseMsg msg) {
         LamportId lampId = msg.getLamportId();
-        log.info("Quorum for lamport {}", lampId);
         List<QueryResponseMsg> responses = quorumResponses.get(lampId);
 
         // We have dealt with the quorum, the response can be ignored
@@ -92,7 +91,7 @@ public class QuorumManager extends AbstractDBActor {
     private QueryResponseMsg getQuorumResponse(List<QueryResponseMsg> messages) {
         LamportQuery lamportQuery = messages.get(0).getLamportQuery();
         LamportId lampId = lamportQuery.getLamportId();
-        log.info("Quorum response for lamport {}", lampId);
+        log.debug("({}) Quorum response", lampId);
 
         Class<? extends QueryResponseMsg> msgClass = messages.get(0).getClass();
         boolean allResponsesSameType = true;
@@ -126,7 +125,6 @@ public class QuorumManager extends AbstractDBActor {
     }
 
     private QueryResponseMsg getResultQuorum(List<QueryResponseMsg> messages) {
-        log.info("Quorum result0 for lamport {}", messages.get(0).getLamportId());
         // TODO: compare messages to get correct result
         Map<Long, StoredRow> resultRowsMap = new HashMap<>();
 
@@ -138,20 +136,17 @@ public class QuorumManager extends AbstractDBActor {
             }
         }
 
-        log.info("Quorum result for lamport {}", messages.get(0).getLamportId());
         List<Row> resultRows = resultRowsMap.values().stream().map(StoredRow::getRow).collect(Collectors.toList());
         return new QueryResultMsg(resultRows, messages.get(0).getLamportQuery());
     }
 
     private QueryResponseMsg getSuccessQuorum(List<QueryResponseMsg> messages) {
         // All queries returned success, so we can return any one of them
-        log.info("Quorum success for lamport {}", messages.get(0).getLamportId());
         return messages.get(0);
     }
 
     private QueryResponseMsg getErrorQuorum(List<QueryResponseMsg> messages) {
         // All queries returned an error, so we can return any one of them
-        log.info("Quorum error for lamport {}", messages.get(0).getLamportId());
         return messages.get(0);
     }
 
