@@ -93,6 +93,7 @@ public class QuorumManager extends AbstractDBActor {
         LamportId lampId = lamportQuery.getLamportId();
         log.debug("({}) Quorum response", lampId);
 
+        // TODO: ugly code
         Class<? extends QueryResponseMsg> msgClass = messages.get(0).getClass();
         boolean allResponsesSameType = true;
         QueryErrorMsg encounteredError = null;
@@ -151,6 +152,7 @@ public class QuorumManager extends AbstractDBActor {
     }
 
     private void updateLamportId(LamportQueryMsg msg) {
+        // TODO: fix this
         LamportId other = msg.getLamportId();
         if (lamportId.isGreaterThan(other)) {
             lamportId = lamportId.increment();

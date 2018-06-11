@@ -111,6 +111,7 @@ public class Partition extends AbstractDBActor {
 
             // We have a newer version stored already (last-write-wins)
             if (oldLamportId.isGreaterThan(msg.getLamportId())) {
+                // TODO: is this correct
                 String error = "Newer version of key '" + newRow.getKey() + "' exists (" + oldLamportId + ")";
                 getSender().tell(new QueryErrorMsg(error, msg.getLamportQuery()), getSelf());
                 return;
@@ -166,6 +167,7 @@ public class Partition extends AbstractDBActor {
     }
 
     private List<StoredRow> getSortedStoredRows() {
+        // TODO: performance 'n shit
         return rows.entrySet().stream()
                 .map(Map.Entry::getValue)
                 .sorted(Comparator.comparingLong(sr -> sr.getRow().getHashKey()))
