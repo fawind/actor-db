@@ -1,4 +1,4 @@
-package cli.commands;
+package api.commands;
 
 import lombok.Builder;
 import lombok.Data;

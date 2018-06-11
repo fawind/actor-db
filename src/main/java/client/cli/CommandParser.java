@@ -1,11 +1,10 @@
-package cli;
+package client.cli;
 
-import cli.commands.Command;
-import cli.commands.CommandBuilder;
-import cli.commands.CreateTableCommand;
-import cli.commands.InsertIntoCommand;
-import cli.commands.InvalidCommand;
-import cli.commands.SelectAllCommand;
+import api.commands.Command;
+import api.commands.CreateTableCommand;
+import api.commands.InsertIntoCommand;
+import api.commands.InvalidCommand;
+import api.commands.SelectAllCommand;
 import com.google.common.base.Splitter;
 
 import java.util.List;

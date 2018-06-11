@@ -1,11 +1,15 @@
-package actors;
+package api;
 
 import akka.actor.AbstractActor;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 import messages.query.QueryErrorMsg;
 import messages.query.QueryResultMsg;
 import messages.query.QuerySuccessMsg;
 
 public abstract class AbstractClientActor extends AbstractActor {
+
+    protected LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
     @Override
     public Receive createReceive() {

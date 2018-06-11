@@ -7,7 +7,7 @@ import messages.query.QuerySuccessMsg;
 
 public class CLIActor extends AbstractDBActor {
 
-    public static final String ACTOR_NAME = "cli";
+    public static final String ACTOR_NAME = "client/cli";
 
     public static Props props() {
         return Props.create(CLIActor.class);

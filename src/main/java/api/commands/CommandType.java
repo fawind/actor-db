@@ -1,4 +1,4 @@
-package cli.commands;
+package api.commands;
 
 public enum CommandType {
     INVALID,
