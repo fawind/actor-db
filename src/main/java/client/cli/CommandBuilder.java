@@ -1,4 +1,7 @@
-package cli.commands;
+package client.cli;
+
+import api.commands.Command;
+import api.commands.InvalidCommand;
 
 import java.util.HashMap;
 import java.util.List;

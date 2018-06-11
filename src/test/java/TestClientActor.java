@@ -1,4 +1,4 @@
-import actors.AbstractClientActor;
+import api.AbstractClientActor;
 import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;

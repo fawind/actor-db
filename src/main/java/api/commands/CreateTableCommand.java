@@ -1,4 +1,4 @@
-package cli.commands;
+package api.commands;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +9,8 @@ import java.util.List;
 @Builder
 public class CreateTableCommand implements Command {
 
-    private final String tableName;
-    private final List<String> schema;
+    private String tableName;
+    private List<String> schema;
 
     @Override
     public CommandType getCommandType() {
