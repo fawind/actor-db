@@ -16,8 +16,9 @@ public class LamportId implements Serializable, Comparable<LamportId> {
     private String clientRequestId;
     private long stamp;
 
-    public LamportId(String clientId, String requestId, long stamp) {
+    public LamportId(String clientId, String clientRequestId, long stamp) {
         this.clientId = clientId;
+        this.clientRequestId = clientRequestId;
         this.stamp = stamp;
     }
 
