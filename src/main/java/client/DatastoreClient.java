@@ -33,7 +33,8 @@ public class DatastoreClient implements AutoCloseable {
     public void start() {
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         clusterClient = actorSystem.actorOf(ClusterClient.props(getClusterClientSettings()), CLUSTER_CLIENT_NAME);
-        clientActor = actorSystem.actorOf(ClientActor.props(config, clusterClient, clientRequestFactory), ClientActor.ACTOR_NAME);
+        clientActor = actorSystem.actorOf(ClientActor.props(config, clusterClient, clientRequestFactory), ClientActor
+                .ACTOR_NAME);
     }
 
     public CompletableFuture<QueryResponseMsg> sendRequest(Command command) {

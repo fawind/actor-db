@@ -13,9 +13,10 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ClientRequest implements Serializable {
 
+    private Command command;
+    private String clientRequestId;
+    private LamportId lamportId;
+
     // Used for serialization
     private ClientRequest() {}
-
-    private Command command;
-    private LamportId lamportId;
 }

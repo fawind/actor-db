@@ -12,5 +12,6 @@ import java.util.Set;
 public class DatastoreClientConfig {
     private final Config akkaConfig;
     private final Set<ActorPath> initialContacts;
-    @Builder.Default private final String clientEndpointPath = "/user/client-endpoint";
+    @Builder.Default
+    private final String clientEndpointPath = "/user/client-endpoint";
 }

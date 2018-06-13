@@ -3,12 +3,14 @@ package actors;
 import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
+import api.messages.LamportId;
+import api.messages.QueryMetaInfo;
 import messages.query.CreateTableMsg;
 import messages.query.DropTableMsg;
 import messages.query.InsertMsg;
 import messages.query.InsertRowMsg;
-import messages.query.LamportQueryMsg;
 import messages.query.QueryErrorMsg;
+import messages.query.QueryMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
@@ -16,11 +18,15 @@ import messages.query.SelectWhereMsg;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class Master extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "master";
     private final Map<String, ActorRef> tables;
+
+    private final String id = UUID.randomUUID().toString();
+    private LamportId lamportId = new LamportId(id);
 
     private Master() {
         tables = new HashMap<>();
@@ -44,14 +50,14 @@ public class Master extends AbstractDBActor {
 
     private void handleInsert(InsertMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), msg.getLamportQuery()), getSender()));
+        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSender()));
     }
 
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.", msg.getLamportQuery()),
-                    getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
+                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
             return;
         }
 
@@ -61,7 +67,7 @@ public class Master extends AbstractDBActor {
         log.debug("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
-        getSender().tell(new QuerySuccessMsg(msg.getLamportQuery()), getSelf());
+        getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
     }
 
     private void handleDropTable(DropTableMsg msg) {
@@ -69,8 +75,8 @@ public class Master extends AbstractDBActor {
 
         ActorRef table = tables.remove(tableName);
         if (table == null) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.", msg.getLamportQuery()),
-                    getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' doesn't exists.",
+                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
             return;
         }
 
@@ -79,22 +85,36 @@ public class Master extends AbstractDBActor {
 
     private void handleSelectAll(SelectAllMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(msg, getSender()));
+        table.ifPresent(t -> tellWithResponseLamportId(t, msg));
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(msg, getSender()));
+        table.ifPresent(t -> tellWithResponseLamportId(t, msg));
     }
 
-    private Optional<ActorRef> assertTableExists(String tableName, LamportQueryMsg msg) {
+    private Optional<ActorRef> assertTableExists(String tableName, QueryMsg msg) {
         ActorRef table = tables.get(tableName);
         if (table == null) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.", msg.getLamportQuery()),
-                    getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' does not exist.",
+                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
             return Optional.empty();
         } else {
             return Optional.of(table);
         }
+    }
+
+    private void tellWithResponseLamportId(ActorRef to, QueryMsg msg) {
+        msg.updateMetaInfo(addResponseLamportIdToMeta(msg.getQueryMetaInfo()));
+        to.tell(msg, getSender());
+    }
+
+    private QueryMetaInfo addResponseLamportIdToMeta(QueryMetaInfo metaInfo) {
+        return metaInfo.copyWithResponseLamportId(updatedLamportId(metaInfo.getLamportId()));
+    }
+
+    private LamportId updatedLamportId(LamportId other) {
+        lamportId = lamportId.maxIdCopy(other);
+        return lamportId;
     }
 }

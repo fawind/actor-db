@@ -1,6 +1,6 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
 public final class QueryErrorMsg extends QueryResponseMsg {
 
@@ -9,8 +9,8 @@ public final class QueryErrorMsg extends QueryResponseMsg {
     // Used for serialization
     private QueryErrorMsg() {}
 
-    public QueryErrorMsg(String msg, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public QueryErrorMsg(String msg, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.msg = msg;
     }
 

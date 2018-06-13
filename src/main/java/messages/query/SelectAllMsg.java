@@ -1,16 +1,16 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
-public class SelectAllMsg extends LamportQueryMsg {
+public class SelectAllMsg extends QueryMsg {
 
     private String tableName;
 
     // Used for serialization
     private SelectAllMsg() {}
 
-    public SelectAllMsg(String tableName, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public SelectAllMsg(String tableName, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.tableName = tableName;
     }
 
