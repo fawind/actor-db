@@ -5,7 +5,6 @@ import akka.actor.Props;
 import akka.cluster.client.ClusterClient;
 import api.AbstractClientActor;
 import api.commands.ClientRequest;
-import api.messages.LamportId;
 import client.ClientRequestFactory;
 import client.config.DatastoreClientConfig;
 import client.model.CompletableCommand;

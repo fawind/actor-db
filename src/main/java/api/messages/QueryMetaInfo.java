@@ -45,9 +45,13 @@ public class QueryMetaInfo implements Serializable {
         return responseLamportId;
     }
 
-    public boolean isWriteQuery() { return queryType == QueryType.WRITE; }
+    public boolean isWriteQuery() {
+        return queryType == QueryType.WRITE;
+    }
 
-    public boolean isReadQuery() { return queryType == QueryType.READ; }
+    public boolean isReadQuery() {
+        return queryType == QueryType.READ;
+    }
 
     public QueryMetaInfo copyWithUpdatedLamportId(LamportId lamportId) {
         return new QueryMetaInfo(requester, lamportId, clientRequestId, queryType);
