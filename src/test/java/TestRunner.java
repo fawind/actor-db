@@ -46,7 +46,7 @@ public class TestRunner {
         LamportId id = defaultLamportId;
         store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
     }
@@ -56,10 +56,10 @@ public class TestRunner {
         LamportId id = defaultLamportId;
         store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
-        store.selectAllFrom(tableName, id.increment());
+        store.selectAllFrom(tableName, id.incrementedCopy());
     }
 
     @Test
@@ -67,11 +67,11 @@ public class TestRunner {
         LamportId id = defaultLamportId;
         store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 100; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
 
-        store.selectFromWhere(tableName, row -> row.getKey().equals("13"), id.increment());
+        store.selectFromWhere(tableName, row -> row.getKey().equals("13"), id.incrementedCopy());
     }
 
     @Test
@@ -79,7 +79,7 @@ public class TestRunner {
         LamportId id = defaultLamportId;
         store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 1000; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
     }
@@ -90,9 +90,9 @@ public class TestRunner {
         LamportId id = defaultLamportId;
         store.createTable(tableName, defaultLayout, id);
         for (int i = 0; i <= 10; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto(tableName, new Row(String.valueOf(i), "abc", "23"), id);
         }
-        store.dropTable(tableName, id.increment());
+        store.dropTable(tableName, id.incrementedCopy());
     }
 }

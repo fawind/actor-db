@@ -20,16 +20,15 @@ import static com.google.inject.name.Names.named;
 public class DatastoreClientModule extends AbstractModule {
 
     private static final String AKKA_CLIENT_CONFIG = "akkaClient.conf";
-
-    public static DatastoreClient createInstance(String remoteClusterPath) {
-        Injector injector = Guice.createInjector(new DatastoreClientModule(remoteClusterPath));
-        return injector.getInstance(DatastoreClient.class);
-    }
-
     private final ActorPath remoteClusterPath;
 
     public DatastoreClientModule(String remoteClusterPath) {
         this.remoteClusterPath = ActorPaths.fromString(remoteClusterPath);
+    }
+
+    public static DatastoreClient createInstance(String remoteClusterPath) {
+        Injector injector = Guice.createInjector(new DatastoreClientModule(remoteClusterPath));
+        return injector.getInstance(DatastoreClient.class);
     }
 
     @Override

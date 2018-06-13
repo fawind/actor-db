@@ -1,9 +1,9 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 import model.Row;
 
-public class InsertMsg extends LamportQueryMsg {
+public class InsertMsg extends QueryMsg {
 
     private String tableName;
     private Row row;
@@ -11,8 +11,8 @@ public class InsertMsg extends LamportQueryMsg {
     // Used for serialization
     private InsertMsg() {}
 
-    public InsertMsg(String tableName, Row row, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public InsertMsg(String tableName, Row row, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.tableName = tableName;
         this.row = row;
     }

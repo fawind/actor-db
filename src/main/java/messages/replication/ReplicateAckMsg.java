@@ -1,14 +1,14 @@
 package messages.replication;
 
-import api.messages.LamportQuery;
-import messages.query.LamportQueryMsg;
+import api.messages.QueryMetaInfo;
+import messages.query.QueryMsg;
 
-public class ReplicateAckMsg extends LamportQueryMsg {
+public class ReplicateAckMsg extends QueryMsg {
 
     // Used for serialization
     private ReplicateAckMsg() {}
 
-    public ReplicateAckMsg(LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public ReplicateAckMsg(QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
     }
 }

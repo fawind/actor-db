@@ -31,7 +31,8 @@ public class CLI {
         // TODO: Add configurable run configs for cli-only and local nodes
         try (Datastore datastore = DatastoreModule.createInstance(EnvConfig.withPort(2552))) {
             datastore.start();
-            try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance("akka.tcp://actors-db@127.0.0.1:2552/system/receptionist")) {
+            try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance("akka" +
+                    ".tcp://actors-db@127.0.0.1:2552/system/receptionist")) {
                 datastoreClient.start();
                 readLines(datastoreClient);
             }
@@ -61,6 +62,6 @@ public class CLI {
         }
         Command command = CommandParser.fromLine(message);
         CompletableFuture<QueryResponseMsg> response = datastoreClient.sendRequest(command);
-        response.thenAccept(msg -> System.out.println(">> " + msg));
+        response.thenAccept(msg -> System.out.println(">> " + msg.getQueryMetaInfo()));
     }
 }

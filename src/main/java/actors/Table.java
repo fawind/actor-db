@@ -94,8 +94,8 @@ public class Table extends AbstractDBActor {
 
     private void handleInsert(InsertRowMsg msg) {
         if (msg.getRow().getValues().size() != layout.size()) {
-            getSender().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got " +
-                    msg.getRow().getValues().size(), msg.getLamportQuery()), getSelf());
+            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got" +
+                    " " + msg.getRow().getValues().size(), msg.getQueryMetaInfo()), getSelf());
         }
         ActorRef partition = partitions.get(msg.getRow().getHashKey());
         partition.tell(msg, getSender());
@@ -112,7 +112,7 @@ public class Table extends AbstractDBActor {
         List<StoredRow> result = new ArrayList<>(runningQueryResults.get(lamportId));
         ActorRef quorumManager = queryQuorumManagers.get(lamportId);
         log.debug("Telling QM: {}", lamportId);
-        quorumManager.tell(new PartialQueryResultMsg(result, msg.getLamportQuery()), getSelf());
+        quorumManager.tell(new PartialQueryResultMsg(result, msg.getQueryMetaInfo()), getSelf());
         finishTransaction(lamportId);
     }
 
@@ -135,7 +135,7 @@ public class Table extends AbstractDBActor {
         Collection<BlockedRow> blockedRows = this.blockedRows.get(msg.getOldPartition());
         for (BlockedRow blockedRow : blockedRows) {
             ActorRef partition = partitions.get(blockedRow.getRow().getHashKey());
-            partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getLamportQuery()), getSelf());
+            partition.tell(new InsertRowMsg(blockedRow.getRow(), blockedRow.getQueryMetaInfo()), getSelf());
         }
 
         blockedRows.clear();
@@ -153,7 +153,7 @@ public class Table extends AbstractDBActor {
     private void updateTransaction(LamportId lamportId, ActorRef actor) {
         Set<ActorRef> partitionSet = runningQueries.get(lamportId);
         if (partitionSet == null) {
-            log.error("Cannot update lamportQuery #{}. It is not present in list of transactions", lamportId);
+            log.error("Cannot update queryMetaInfo #{}. It is not present in list of transactions", lamportId);
             return;
         }
         partitionSet.remove(actor);

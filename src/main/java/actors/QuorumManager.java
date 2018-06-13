@@ -3,11 +3,10 @@ package actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import api.messages.LamportId;
-import api.messages.LamportQuery;
-import api.messages.WriteLamportQuery;
-import messages.query.LamportQueryMsg;
+import api.messages.QueryMetaInfo;
 import messages.query.PartialQueryResultMsg;
 import messages.query.QueryErrorMsg;
+import messages.query.QueryMsg;
 import messages.query.QueryResponseMsg;
 import messages.query.QueryResultMsg;
 import messages.query.QuerySuccessMsg;
@@ -33,8 +32,8 @@ public class QuorumManager extends AbstractDBActor {
     private final String id = UUID.randomUUID().toString();
     private final ClusterMemberRegistry memberRegistry;
     private final Map<LamportId, List<QueryResponseMsg>> quorumResponses;
-    // TODO: Fix clientRequestId sitting in lamportId
-    private LamportId lamportId = new LamportId(id, null, 0);
+    private LamportId lamportId = new LamportId(id);
+
     private QuorumManager() {
         memberRegistry = new ClusterMemberRegistry();
         quorumResponses = new HashMap<>();
@@ -49,7 +48,7 @@ public class QuorumManager extends AbstractDBActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(QueryResponseMsg.class, this::handleQuorumResponse)
-                .match(LamportQueryMsg.class, this::handleQuorum)
+                .match(QueryMsg.class, this::handleQuorum)
                 .build();
     }
 
@@ -62,8 +61,7 @@ public class QuorumManager extends AbstractDBActor {
 
         responses.add(msg);
 
-        boolean isWriteTransaction = (msg.getLamportQuery() instanceof WriteLamportQuery);
-        int requiredQuorumSize = isWriteTransaction ? WRITE_QUORUM : READ_QUORUM;
+        int requiredQuorumSize = msg.getQueryMetaInfo().isWriteQuery() ? WRITE_QUORUM : READ_QUORUM;
 
         // Haven't seen enough responses
         if (responses.size() < requiredQuorumSize) return;
@@ -75,14 +73,15 @@ public class QuorumManager extends AbstractDBActor {
         quorumResponses.remove(lampId);
     }
 
-    private void handleQuorum(LamportQueryMsg msg) {
-        updateLamportId(msg);
+    private void handleQuorum(QueryMsg msg) {
+        QueryMetaInfo meta = addNewLamportId(msg.getQueryMetaInfo());
+        msg.updateMetaInfo(meta);
 
         LamportId lampId = msg.getLamportId();
         List<QueryResponseMsg> responses = quorumResponses.put(lampId, new ArrayList<>());
 
         if (responses != null) {
-            // We have seen this lamportQuery before and can ignore it
+            // We have seen this queryMetaInfo before and can ignore it
             quorumResponses.put(lampId, responses);
             return;
         }
@@ -91,8 +90,8 @@ public class QuorumManager extends AbstractDBActor {
     }
 
     private QueryResponseMsg getQuorumResponse(List<QueryResponseMsg> messages) {
-        LamportQuery lamportQuery = messages.get(0).getLamportQuery();
-        LamportId lampId = lamportQuery.getLamportId();
+        QueryMetaInfo queryMetaInfo = messages.get(0).getQueryMetaInfo();
+        LamportId lampId = queryMetaInfo.getLamportId();
         log.debug("({}) Quorum response", lampId);
 
         // TODO: ugly code
@@ -113,7 +112,7 @@ public class QuorumManager extends AbstractDBActor {
 
             // We encountered an error, because they are not all errors and at least one is not of typ Success/Result
             return new QueryErrorMsg("At least one node returned an error response: " + encounteredError.getMsg(),
-                    lamportQuery);
+                    queryMetaInfo);
         }
 
         if (msgClass == PartialQueryResultMsg.class) {
@@ -123,7 +122,7 @@ public class QuorumManager extends AbstractDBActor {
         } else if (msgClass == QueryErrorMsg.class) {
             return getErrorQuorum(messages);
         } else {
-            throw new RuntimeException("Unknown query response");
+            throw new RuntimeException("Unknown queryMetaInfo response");
         }
     }
 
@@ -146,7 +145,7 @@ public class QuorumManager extends AbstractDBActor {
         }
 
         List<Row> resultRows = resultRowsMap.values().stream().map(StoredRow::getRow).collect(Collectors.toList());
-        return new QueryResultMsg(resultRows, messages.get(0).getLamportQuery());
+        return new QueryResultMsg(resultRows, messages.get(0).getQueryMetaInfo());
     }
 
     private QueryResponseMsg getSuccessQuorum(List<QueryResponseMsg> messages) {
@@ -159,15 +158,12 @@ public class QuorumManager extends AbstractDBActor {
         return messages.get(0);
     }
 
-    private void updateLamportId(LamportQueryMsg msg) {
-        // TODO: fix this
-        LamportId other = msg.getLamportId();
-        if (lamportId.isGreaterThan(other)) {
-            lamportId = lamportId.increment();
-        } else {
-            lamportId = lamportId.incrementTo(other.getStamp() + 1);
-        }
+    private QueryMetaInfo addNewLamportId(QueryMetaInfo queryMetaInfo) {
+        return queryMetaInfo.copyWithUpdatedLamportId(updatedLamportId(queryMetaInfo.getLamportId()));
+    }
 
-        msg.getLamportQuery().setLamportId(lamportId);
+    private LamportId updatedLamportId(LamportId other) {
+        lamportId = lamportId.maxIdCopy(other);
+        return lamportId;
     }
 }

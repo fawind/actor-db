@@ -1,6 +1,6 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 import model.Row;
 
 import java.util.List;
@@ -12,8 +12,8 @@ public class QueryResultMsg extends QueryResponseMsg {
     // Used for serialization
     private QueryResultMsg() {}
 
-    public QueryResultMsg(List<Row> result, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public QueryResultMsg(List<Row> result, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.result = result;
     }
 

@@ -1,27 +1,27 @@
 package model;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
 import java.io.Serializable;
 
 public class BlockedRow implements Serializable {
 
     private Row row;
-    private LamportQuery lamportQuery;
+    private QueryMetaInfo queryMetaInfo;
 
     // Used for serialization
     private BlockedRow() {}
 
-    public BlockedRow(Row row, LamportQuery lamportQuery) {
+    public BlockedRow(Row row, QueryMetaInfo queryMetaInfo) {
         this.row = row;
-        this.lamportQuery = lamportQuery;
+        this.queryMetaInfo = queryMetaInfo;
     }
 
     public Row getRow() {
         return row;
     }
 
-    public LamportQuery getLamportQuery() {
-        return lamportQuery;
+    public QueryMetaInfo getQueryMetaInfo() {
+        return queryMetaInfo;
     }
 }

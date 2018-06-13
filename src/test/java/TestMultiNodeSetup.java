@@ -45,10 +45,10 @@ public class TestMultiNodeSetup {
         store.createTable("foo", defaultLayout, id);
 
         for (int i = 0; i < 2; ++i) {
-            id = id.increment();
+            id = id.incrementedCopy();
             store.insertInto("foo", new Row(String.valueOf(i), "abc", "23"), id);
         }
 
-        store.selectAllFrom("foo", id.increment());
+        store.selectAllFrom("foo", id.incrementedCopy());
     }
 }

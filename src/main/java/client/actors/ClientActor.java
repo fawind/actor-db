@@ -5,6 +5,7 @@ import akka.actor.Props;
 import akka.cluster.client.ClusterClient;
 import api.AbstractClientActor;
 import api.commands.ClientRequest;
+import api.messages.LamportId;
 import client.ClientRequestFactory;
 import client.config.DatastoreClientConfig;
 import client.model.CompletableCommand;
@@ -17,18 +18,9 @@ import java.util.concurrent.CompletableFuture;
 public class ClientActor extends AbstractClientActor {
 
     public static final String ACTOR_NAME = "client-actor";
-
-    public static Props props(
-            DatastoreClientConfig config,
-            ActorRef clusterClient,
-            ClientRequestFactory clientRequestFactory) {
-        return Props.create(ClientActor.class, () -> new ClientActor(config, clusterClient, clientRequestFactory));
-    }
-
     private final DatastoreClientConfig config;
     private final ActorRef clusterClient;
     private final ClientRequestFactory clientRequestFactory;
-
     private final Map<String, CompletableFuture<QueryResponseMsg>> requests = new HashMap<>();
 
     public ClientActor(
@@ -38,6 +30,13 @@ public class ClientActor extends AbstractClientActor {
         this.config = config;
         this.clusterClient = clusterClient;
         this.clientRequestFactory = clientRequestFactory;
+    }
+
+    public static Props props(
+            DatastoreClientConfig config,
+            ActorRef clusterClient,
+            ClientRequestFactory clientRequestFactory) {
+        return Props.create(ClientActor.class, () -> new ClientActor(config, clusterClient, clientRequestFactory));
     }
 
     @Override
@@ -51,18 +50,19 @@ public class ClientActor extends AbstractClientActor {
 
     private void handleCommand(CompletableCommand command) {
         ClientRequest clientRequest = clientRequestFactory.buildRequest(command.getCommand());
-        requests.put(clientRequest.getLamportId().getClientRequestId(), command.getResponse());
+        requests.put(clientRequest.getClientRequestId(), command.getResponse());
         clusterClient.tell(new ClusterClient.Send(config.getClientEndpointPath(), clientRequest, true), getSelf());
     }
 
 
     protected void handleQueryResponse(QueryResponseMsg msg) {
-        String clientRequestId = msg.getLamportId().getClientRequestId();
+        String clientRequestId = msg.getQueryMetaInfo().getClientRequestId();
         if (!requests.containsKey(clientRequestId)) {
             log.error("Client did not send request for response {}", msg);
             return;
         }
         CompletableFuture<QueryResponseMsg> request = requests.get(clientRequestId);
         request.complete(msg);
+        clientRequestFactory.updateLamportId(msg.getQueryMetaInfo().getResponseLamportId());
     }
 }

@@ -15,16 +15,16 @@ public class TestClientActor extends AbstractClientActor {
 
     @Override
     protected void handleQuerySuccess(QuerySuccessMsg msg) {
-        log.info("({}) Query w/o result successful", msg.getLamportId());
+        log.info("({}) QueryMetaInfo w/o result successful", msg.getLamportId());
     }
 
     @Override
     protected void handleQueryResult(QueryResultMsg msg) {
-        log.info("({}) Query result: {}", msg.getLamportId(), msg.getResult());
+        log.info("({}) QueryMetaInfo result: {}", msg.getLamportId(), msg.getResult());
     }
 
     @Override
     protected void handleQueryError(QueryErrorMsg msg) {
-        log.error("({}) Query error: {}", msg.getLamportId(), msg.getMsg());
+        log.error("({}) QueryMetaInfo error: {}", msg.getLamportId(), msg.getMsg());
     }
 }

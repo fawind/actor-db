@@ -1,16 +1,16 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
-public class DropTableMsg extends LamportQueryMsg {
+public class DropTableMsg extends QueryMsg {
 
     private String tableName;
 
     // Used for serialization
     private DropTableMsg() {}
 
-    public DropTableMsg(String tableName, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public DropTableMsg(String tableName, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.tableName = tableName;
     }
 

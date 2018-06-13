@@ -15,6 +15,7 @@ public class ClusterMemberListener extends AbstractDBActor {
     public static final String ACTOR_NAME = "cluster-member-listener";
     private final ClusterMemberRegistry memberRegistry;
     private Cluster cluster = Cluster.get(getContext().getSystem());
+
     public ClusterMemberListener(ClusterMemberRegistry memberRegistry) {
         this.memberRegistry = memberRegistry;
     }

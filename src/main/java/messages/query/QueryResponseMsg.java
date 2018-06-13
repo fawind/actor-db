@@ -1,11 +1,11 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
-public class QueryResponseMsg extends LamportQueryMsg {
+public class QueryResponseMsg extends QueryMsg {
     protected QueryResponseMsg() {}
 
-    public QueryResponseMsg(LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public QueryResponseMsg(QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
     }
 }

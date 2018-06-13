@@ -1,17 +1,17 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 import model.Row;
 
-public class InsertRowMsg extends LamportQueryMsg {
+public class InsertRowMsg extends QueryMsg {
 
     private Row row;
 
     // Used for serialization
     private InsertRowMsg() {}
 
-    public InsertRowMsg(Row row, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public InsertRowMsg(Row row, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.row = row;
     }
 

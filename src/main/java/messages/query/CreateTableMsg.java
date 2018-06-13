@@ -1,18 +1,18 @@
 package messages.query;
 
-import api.messages.LamportQuery;
+import api.messages.QueryMetaInfo;
 
 import java.util.List;
 
-public final class CreateTableMsg extends LamportQueryMsg {
+public final class CreateTableMsg extends QueryMsg {
 
     private String tableName;
     private List<String> layout;
 
     private CreateTableMsg() {}
 
-    public CreateTableMsg(String tableName, List<String> layout, LamportQuery lamportQuery) {
-        super(lamportQuery);
+    public CreateTableMsg(String tableName, List<String> layout, QueryMetaInfo queryMetaInfo) {
+        super(queryMetaInfo);
         this.tableName = tableName;
         this.layout = layout;
     }

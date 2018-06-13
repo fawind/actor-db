@@ -11,9 +11,9 @@ import messages.partition.SplitInsertMsg;
 import messages.partition.SplitPartitionMsg;
 import messages.partition.SplitSuccessMsg;
 import messages.query.InsertRowMsg;
-import messages.query.LamportQueryMsg;
 import messages.query.PartialQueryResultMsg;
 import messages.query.QueryErrorMsg;
+import messages.query.QueryMsg;
 import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
@@ -78,7 +78,7 @@ public class Partition extends AbstractDBActor {
         if (seenTransaction(msg)) return;
 
         List<StoredRow> resultRows = new ArrayList<>(rows.values());
-        getSender().tell(new PartialQueryResultMsg(resultRows, msg.getLamportQuery()), getSelf());
+        getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
@@ -88,7 +88,7 @@ public class Partition extends AbstractDBActor {
         List<StoredRow> resultRows = rows.values().stream()
                 .filter(storedRow -> whereFn.test(storedRow.getRow()))
                 .collect(Collectors.toList());
-        getSender().tell(new PartialQueryResultMsg(resultRows, msg.getLamportQuery()), getSelf());
+        getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
     }
 
     private void handleInsert(InsertRowMsg msg) {
@@ -97,7 +97,7 @@ public class Partition extends AbstractDBActor {
 
         if (isFull) {
             // Can't insert new rows while the partition is being split
-            BlockedRow blockedRow = new BlockedRow(newRow, msg.getLamportQuery());
+            BlockedRow blockedRow = new BlockedRow(newRow, msg.getQueryMetaInfo());
             table.tell(new PartitionBlockedMsg(blockedRow), getSelf());
             return;
         }
@@ -113,7 +113,7 @@ public class Partition extends AbstractDBActor {
             if (oldLamportId.isGreaterThan(msg.getLamportId())) {
                 // TODO: is this correct
                 String error = "Newer version of key '" + newRow.getKey() + "' exists (" + oldLamportId + ")";
-                getSender().tell(new QueryErrorMsg(error, msg.getLamportQuery()), getSelf());
+                getSender().tell(new QueryErrorMsg(error, msg.getQueryMetaInfo()), getSelf());
                 return;
             }
         }
@@ -137,7 +137,7 @@ public class Partition extends AbstractDBActor {
             table.tell(new PartitionFullMsg(newRange), getSelf());
         }
 
-        getSender().tell(new QuerySuccessMsg(msg.getLamportQuery()), getSelf());
+        getSender().tell(new QuerySuccessMsg(msg.getQueryMetaInfo()), getSelf());
     }
 
     private void handleSplitPartition(SplitPartitionMsg msg) {
@@ -162,7 +162,7 @@ public class Partition extends AbstractDBActor {
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
     }
 
-    private boolean seenTransaction(LamportQueryMsg msg) {
+    private boolean seenTransaction(QueryMsg msg) {
         return !seenTransactions.add(msg.getLamportId());
     }
 
