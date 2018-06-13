@@ -1,17 +1,28 @@
 package api.messages;
 
 import akka.actor.ActorRef;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Setter;
 
-@Data
-@Setter(AccessLevel.NONE)
-public class LamportQuery {
+import java.io.Serializable;
 
-    // Used for serialization
-    private LamportQuery() {}
+public abstract class LamportQuery implements Serializable {
 
-    private ActorRef requester;
     private LamportId lamportId;
+    private ActorRef requester;
+
+    public LamportQuery(ActorRef requester, LamportId lamportId) {
+        this.requester = requester;
+        this.lamportId = lamportId;
+    }
+
+    public LamportId getLamportId() {
+        return lamportId;
+    }
+
+    public void setLamportId(LamportId lamportId) {
+        this.lamportId = lamportId;
+    }
+
+    public ActorRef getRequester() {
+        return requester;
+    }
 }

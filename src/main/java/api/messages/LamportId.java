@@ -1,7 +1,6 @@
 package api.messages;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Setter;
 
@@ -9,13 +8,35 @@ import java.io.Serializable;
 
 @Data
 @Setter(AccessLevel.NONE)
-@AllArgsConstructor
-public class LamportId implements Serializable {
+public class LamportId implements Serializable, Comparable<LamportId> {
 
-    // Used for serialization
-    private LamportId() {}
+    public final static LamportId INVALID_LAMPORT_ID = new LamportId(null, null, -1);
 
     private String clientId;
     private String clientRequestId;
     private long stamp;
+
+    public LamportId(String clientId, String requestId, long stamp) {
+        this.clientId = clientId;
+        this.stamp = stamp;
+    }
+
+    public LamportId incrementTo(long x) {
+        return new LamportId(clientId, clientRequestId, x);
+    }
+
+    public LamportId increment() {
+        return incrementTo(stamp + 1);
+    }
+
+    @Override
+    public int compareTo(LamportId other) {
+        return stamp == other.stamp
+                ? clientRequestId.compareTo(other.clientRequestId)
+                : Long.compare(stamp, other.stamp);
+    }
+
+    public boolean isGreaterThan(LamportId other) {
+        return compareTo(other) > 0;
+    }
 }

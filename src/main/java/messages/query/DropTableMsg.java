@@ -1,6 +1,6 @@
 package messages.query;
 
-import model.LamportQuery;
+import api.messages.LamportQuery;
 
 public class DropTableMsg extends LamportQueryMsg {
 

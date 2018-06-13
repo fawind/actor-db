@@ -1,5 +1,7 @@
 package model;
 
+import api.messages.LamportQuery;
+
 import java.io.Serializable;
 
 public class BlockedRow implements Serializable {

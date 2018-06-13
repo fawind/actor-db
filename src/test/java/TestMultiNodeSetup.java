@@ -1,8 +1,8 @@
+import api.messages.LamportId;
 import com.google.common.collect.ImmutableList;
 import configuration.DatastoreModule;
 import configuration.EnvConfig;
 import core.Datastore;
-import model.LamportId;
 import model.Row;
 import org.junit.After;
 import org.junit.Before;

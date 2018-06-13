@@ -1,8 +1,8 @@
 package messages.query;
 
 import akka.actor.ActorRef;
-import model.LamportId;
-import model.LamportQuery;
+import api.messages.LamportId;
+import api.messages.LamportQuery;
 
 import java.io.Serializable;
 

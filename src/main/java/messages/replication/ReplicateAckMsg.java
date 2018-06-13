@@ -1,7 +1,7 @@
 package messages.replication;
 
+import api.messages.LamportQuery;
 import messages.query.LamportQueryMsg;
-import model.LamportQuery;
 
 public class ReplicateAckMsg extends LamportQueryMsg {
 

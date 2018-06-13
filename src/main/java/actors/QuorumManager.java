@@ -2,22 +2,23 @@ package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import api.messages.LamportId;
+import api.messages.LamportQuery;
+import api.messages.WriteLamportQuery;
 import messages.query.LamportQueryMsg;
 import messages.query.PartialQueryResultMsg;
 import messages.query.QueryErrorMsg;
 import messages.query.QueryResponseMsg;
 import messages.query.QueryResultMsg;
 import messages.query.QuerySuccessMsg;
-import model.LamportId;
-import model.LamportQuery;
 import model.Row;
 import model.StoredRow;
-import model.WriteLamportQuery;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -29,10 +30,11 @@ public class QuorumManager extends AbstractDBActor {
     private static final int READ_QUORUM = 1;
     private static final int WRITE_QUORUM = 1;
 
-    private final long id = 0;
+    private final String id = UUID.randomUUID().toString();
     private final ClusterMemberRegistry memberRegistry;
     private final Map<LamportId, List<QueryResponseMsg>> quorumResponses;
-    private LamportId lamportId = new LamportId(id, 0);
+    // TODO: Fix clientRequestId sitting in lamportId
+    private LamportId lamportId = new LamportId(id, null, 0);
     private QuorumManager() {
         memberRegistry = new ClusterMemberRegistry();
         quorumResponses = new HashMap<>();

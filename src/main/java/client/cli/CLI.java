@@ -28,6 +28,7 @@ public class CLI {
     }
 
     public void run() {
+        // TODO: Add configurable run configs for cli-only and local nodes
         try (Datastore datastore = DatastoreModule.createInstance(EnvConfig.withPort(2552))) {
             datastore.start();
             try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance("akka.tcp://actors-db@127.0.0.1:2552/system/receptionist")) {
@@ -60,6 +61,6 @@ public class CLI {
         }
         Command command = CommandParser.fromLine(message);
         CompletableFuture<QueryResponseMsg> response = datastoreClient.sendRequest(command);
-        response.thenAccept(System.out::println);
+        response.thenAccept(msg -> System.out.println(">> " + msg));
     }
 }
