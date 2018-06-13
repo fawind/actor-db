@@ -128,14 +128,20 @@ public class QuorumManager extends AbstractDBActor {
     }
 
     private QueryResponseMsg getResultQuorum(List<QueryResponseMsg> messages) {
-        // TODO: compare messages to get correct result
         Map<Long, StoredRow> resultRowsMap = new HashMap<>();
 
         for (QueryResponseMsg msg : messages) {
             PartialQueryResultMsg resultMsg = (PartialQueryResultMsg) msg;
             for (StoredRow storedRow : resultMsg.getResult()) {
-                // TODO: This will overwrite if a row is present in two different versions
-                resultRowsMap.put(storedRow.getRow().getHashKey(), storedRow);
+                long key = storedRow.getRow().getHashKey();
+                StoredRow prev = resultRowsMap.get(key);
+
+                // If a newer version is in the result set, ignore this row
+                if (prev != null && prev.getLamportId().isGreaterThan(storedRow.getLamportId())) {
+                    continue;
+                }
+
+                resultRowsMap.put(key, storedRow);
             }
         }
 
