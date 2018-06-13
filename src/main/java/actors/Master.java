@@ -50,7 +50,8 @@ public class Master extends AbstractDBActor {
 
     private void handleInsert(InsertMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
-        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSender()));
+        table.ifPresent(t -> t.tell(new InsertRowMsg(msg.getRow(), addResponseLamportIdToMeta(msg.getQueryMetaInfo())
+        ), getSender()));
     }
 
     private void handleCreateTable(CreateTableMsg msg) {
