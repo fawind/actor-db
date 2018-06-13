@@ -2,6 +2,7 @@ package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import api.messages.LamportId;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Range;
@@ -18,7 +19,6 @@ import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
 import model.BlockedRow;
-import model.LamportId;
 import model.StoredRow;
 
 import java.util.ArrayList;

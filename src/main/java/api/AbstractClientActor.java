@@ -3,9 +3,7 @@ package api;
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import messages.query.QueryErrorMsg;
-import messages.query.QueryResultMsg;
-import messages.query.QuerySuccessMsg;
+import messages.query.QueryResponseMsg;
 
 public abstract class AbstractClientActor extends AbstractActor {
 
@@ -14,15 +12,9 @@ public abstract class AbstractClientActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(QuerySuccessMsg.class, this::handleQuerySuccess)
-                .match(QueryResultMsg.class, this::handleQueryResult)
-                .match(QueryErrorMsg.class, this::handleQueryError)
+                .match(QueryResponseMsg.class, this::handleQueryResponse)
                 .build();
     }
 
-    protected abstract void handleQuerySuccess(QuerySuccessMsg msg);
-
-    protected abstract void handleQueryResult(QueryResultMsg msg);
-
-    protected abstract void handleQueryError(QueryErrorMsg msg);
+    protected abstract void handleQueryResponse(QueryResponseMsg msg);
 }

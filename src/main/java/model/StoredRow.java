@@ -1,5 +1,7 @@
 package model;
 
+import api.messages.LamportId;
+
 import java.io.Serializable;
 
 public class StoredRow implements Serializable {

@@ -7,8 +7,13 @@ import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectAllCommand;
 import api.messages.LamportId;
+import api.messages.ReadLamportQuery;
+import api.messages.WriteLamportQuery;
+import messages.query.CreateTableMsg;
+import messages.query.InsertMsg;
+import messages.query.SelectAllMsg;
+import model.Row;
 
-// TODO: Add mapping from request to result
 public class ClientEndpoint extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "client-endpoint";
@@ -51,15 +56,21 @@ public class ClientEndpoint extends AbstractDBActor {
     }
 
     private void createTable(CreateTableCommand command, LamportId lamportId) {
-        log.info("Create Table");
-        // TODO: QuorumMananger.tell()
+        CreateTableMsg msg = new CreateTableMsg(
+                command.getTableName(),
+                command.getSchema(),
+                new WriteLamportQuery(getSender(), lamportId));
+        quorumManager.tell(msg, getSelf());
     }
 
     private void insertInto(InsertIntoCommand command, LamportId lamportId) {
-        log.info("Insert Into");
+        Row row = new Row(command.getValues().toArray(new String[command.getValues().size()]));
+        InsertMsg msg = new InsertMsg(command.getTableName(), row, new WriteLamportQuery(getSender(), lamportId));
+        quorumManager.tell(msg, getSelf());
     }
 
     private void selectAllFrom(SelectAllCommand command, LamportId lamportId) {
-        log.info("Select All From");
+        SelectAllMsg msg = new SelectAllMsg(command.getTableName(), new ReadLamportQuery(getSender(), lamportId));
+        quorumManager.tell(msg, getSelf());
     }
 }

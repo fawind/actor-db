@@ -2,6 +2,7 @@ package actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import api.messages.LamportId;
 import com.google.common.collect.Range;
 import messages.partition.PartialSplitSuccessMsg;
 import messages.partition.PartitionBlockedMsg;
@@ -17,7 +18,6 @@ import messages.query.QuerySuccessMsg;
 import messages.query.SelectAllMsg;
 import messages.query.SelectWhereMsg;
 import model.BlockedRow;
-import model.LamportId;
 import model.Row;
 import model.StoredRow;
 import utils.FIFOCache;

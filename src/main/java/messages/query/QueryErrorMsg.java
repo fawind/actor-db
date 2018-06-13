@@ -1,6 +1,6 @@
 package messages.query;
 
-import model.LamportQuery;
+import api.messages.LamportQuery;
 
 public final class QueryErrorMsg extends QueryResponseMsg {
 
