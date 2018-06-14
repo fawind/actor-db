@@ -2,6 +2,8 @@ package client.config;
 
 import akka.actor.ActorPath;
 import akka.actor.ActorPaths;
+import api.configuration.AkkaConfigLoader;
+import api.configuration.EnvConfig;
 import client.ClientRequestFactory;
 import client.DatastoreClient;
 import com.google.common.collect.ImmutableSet;
@@ -10,24 +12,28 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 import java.util.Set;
 import java.util.UUID;
 
 import static com.google.inject.name.Names.named;
+import static java.lang.String.format;
 
 public class DatastoreClientModule extends AbstractModule {
 
     private static final String AKKA_CLIENT_CONFIG = "akkaClient.conf";
-    private final ActorPath remoteClusterPath;
+    private static final String DATASTORE_PATH_TEMPLATE = "akka.tcp://actors-db@%s:%d/system/receptionist";
 
-    public DatastoreClientModule(String remoteClusterPath) {
-        this.remoteClusterPath = ActorPaths.fromString(remoteClusterPath);
+    private final EnvConfig clientEnvConfig;
+    private final EnvConfig storeEnvConfig;
+
+    public DatastoreClientModule(EnvConfig clientEnvConfig, EnvConfig storeEnvConfig) {
+        this.clientEnvConfig = clientEnvConfig;
+        this.storeEnvConfig = storeEnvConfig;
     }
 
-    public static DatastoreClient createInstance(String remoteClusterPath) {
-        Injector injector = Guice.createInjector(new DatastoreClientModule(remoteClusterPath));
+    public static DatastoreClient createInstance(EnvConfig clientEnvConfig, EnvConfig storeEnvConfig) {
+        Injector injector = Guice.createInjector(new DatastoreClientModule(clientEnvConfig, storeEnvConfig));
         return injector.getInstance(DatastoreClient.class);
     }
 
@@ -47,14 +53,19 @@ public class DatastoreClientModule extends AbstractModule {
     }
 
     private Config getAkkaConfig() {
-        return ConfigFactory.load(AKKA_CLIENT_CONFIG);
+        return AkkaConfigLoader.loadAkkaConfig(AKKA_CLIENT_CONFIG, clientEnvConfig);
     }
 
     private Set<ActorPath> getInitialContacts() {
-        return ImmutableSet.of(remoteClusterPath);
+        return ImmutableSet.of(getDatastoreActorPath());
     }
 
     private String getClientId() {
         return UUID.randomUUID().toString();
+    }
+
+    private ActorPath getDatastoreActorPath() {
+        return ActorPaths.fromString(
+                format(DATASTORE_PATH_TEMPLATE, storeEnvConfig.getHostname(), storeEnvConfig.getPort()));
     }
 }

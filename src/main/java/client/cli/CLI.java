@@ -1,10 +1,10 @@
 package client.cli;
 
 import api.commands.Command;
+import api.configuration.EnvConfig;
 import client.DatastoreClient;
 import client.config.DatastoreClientModule;
 import configuration.DatastoreModule;
-import configuration.EnvConfig;
 import core.Datastore;
 import messages.query.QueryResponseMsg;
 import org.jline.reader.EndOfFileException;
@@ -29,10 +29,11 @@ public class CLI {
 
     public void run() {
         // TODO: Add configurable run configs for cli-only and local nodes
-        try (Datastore datastore = DatastoreModule.createInstance(EnvConfig.withPort(2552))) {
+        EnvConfig datastoreEnv = EnvConfig.withPort(2552);
+        EnvConfig clientEnvConfig = EnvConfig.withPort(2553);
+        try (Datastore datastore = DatastoreModule.createInstance(datastoreEnv)) {
             datastore.start();
-            try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance("akka" +
-                    ".tcp://actors-db@127.0.0.1:2552/system/receptionist")) {
+            try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance(clientEnvConfig, datastoreEnv)) {
                 datastoreClient.start();
                 readLines(datastoreClient);
             }
