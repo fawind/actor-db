@@ -43,6 +43,7 @@ public class WorkflowTests {
 
     @Before
     public void setup() throws Exception {
+        Thread.sleep(500);
         datastore = DatastoreModule.createInstance(DATASTORE_ENV_CONFIG);
         datastore.start();
         client = DatastoreClientModule.createInstance(CLIENT_ENV_CONFIG, DATASTORE_ENV_CONFIG);
