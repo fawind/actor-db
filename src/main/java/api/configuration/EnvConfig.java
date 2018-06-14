@@ -1,4 +1,4 @@
-package configuration;
+package api.configuration;
 
 import lombok.Builder;
 import lombok.Data;
