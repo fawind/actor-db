@@ -11,6 +11,8 @@ import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.Status;
 import messages.query.QueryErrorMsg;
 import messages.query.QueryResponseMsg;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +26,8 @@ import static java.lang.String.format;
 
 public class ActorDbClient extends DB {
 
+    private static final Logger log = LoggerFactory.getLogger(ActorDbClient.class);
+
     private DatastoreClient client;
 
     @Override
@@ -36,11 +40,17 @@ public class ActorDbClient extends DB {
         client = DatastoreClientModule.createInstance(clientEnvConfig, storeEnvConfig);
         client.start();
 
-        String tableName = props.getProperty("tableName");
-        if (tableName == null || tableName.equals("null")) {
-            throw new DBException("Table name not set");
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new DBException(e);
         }
-        createDefaultTable(tableName);
+
+        String tableName = props.getProperty("tableName");
+        if (tableName != null) {
+            log.info("Creating table {}", tableName);
+            createDefaultTable(tableName);
+        }
     }
 
     @Override
@@ -50,7 +60,6 @@ public class ActorDbClient extends DB {
 
     @Override
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
-        // TODO: Implement where fn
         SelectCommand cmd = SelectCommand.builder()
                 .tableName(table)
                 .key(key)
@@ -100,6 +109,8 @@ public class ActorDbClient extends DB {
         try {
             QueryResponseMsg msg = response.get();
             if (msg instanceof QueryErrorMsg) {
+                QueryErrorMsg errorMsg = (QueryErrorMsg) msg;
+                log.error(errorMsg.getMsg());
                 return Status.ERROR;
             }
             return Status.OK;
