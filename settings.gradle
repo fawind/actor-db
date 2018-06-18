@@ -1,3 +1,5 @@
 rootProject.name = 'actor-db'
 
 include 'store'
+include 'benchmark'
+
