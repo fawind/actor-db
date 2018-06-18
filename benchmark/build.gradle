@@ -1,0 +1,13 @@
+repositories {
+    mavenCentral()
+    maven {
+        url 'http://kompics.sics.se/maven/repository'
+    }
+}
+
+dependencies {
+    compile project(':store')
+    compile 'com.yahoo.ycsb:core:0.1.4'
+
+    testCompile 'junit:junit:4.12'
+}
