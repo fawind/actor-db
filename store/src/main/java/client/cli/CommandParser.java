@@ -32,7 +32,7 @@ public class CommandParser {
         if (parts.size() != 3) {
             throw new IllegalArgumentException("Invalid argument count");
         }
-        List<String> types = Splitter.on(", ").splitToList(parts.get(2));
+        List<String> types = Splitter.on(",").splitToList(parts.get(2));
         return CreateTableCommand.builder()
                 .tableName(parts.get(1))
                 .schema(types)
@@ -46,7 +46,7 @@ public class CommandParser {
         if (parts.size() != 3) {
             throw new IllegalArgumentException("Invalid argument count");
         }
-        List<String> values = Splitter.on(", ").splitToList(parts.get(2));
+        List<String> values = Splitter.on(",").splitToList(parts.get(2));
         return InsertIntoCommand.builder()
                 .tableName(parts.get(1))
                 .values(values)

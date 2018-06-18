@@ -94,8 +94,8 @@ public class Table extends AbstractDBActor {
 
     private void handleInsert(InsertRowMsg msg) {
         if (msg.getRow().getValues().size() != layout.size()) {
-            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + "columns but got" +
-                    " " + msg.getRow().getValues().size(), msg.getQueryMetaInfo()), getSelf());
+            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + " columns but got " +
+                    msg.getRow().getValues().size(), msg.getQueryMetaInfo()), getSelf());
         }
         ActorRef partition = partitions.get(msg.getRow().getHashKey());
         partition.tell(msg, getSender());

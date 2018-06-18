@@ -6,6 +6,7 @@ import client.DatastoreClient;
 import client.config.DatastoreClientModule;
 import configuration.DatastoreModule;
 import core.Datastore;
+import messages.query.QueryErrorMsg;
 import messages.query.QueryResponseMsg;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -63,6 +64,12 @@ public class CLI {
         }
         Command command = CommandParser.fromLine(message);
         CompletableFuture<QueryResponseMsg> response = datastoreClient.sendRequest(command);
-        response.thenAccept(msg -> System.out.println(">> " + msg.getQueryMetaInfo()));
+        response.thenAccept(msg -> {
+            if (msg instanceof QueryErrorMsg) {
+                System.err.println(">> [ERROR] " + ((QueryErrorMsg) msg).getMsg());
+            } else {
+                System.out.println(">> " + msg.getQueryMetaInfo());
+            }
+        });
     }
 }
