@@ -6,11 +6,13 @@ import api.commands.ClientRequest;
 import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectAllCommand;
+import api.commands.SelectWhereCommand;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
 import messages.query.CreateTableMsg;
 import messages.query.InsertMsg;
 import messages.query.SelectAllMsg;
+import messages.query.SelectWhereMsg;
 import model.Row;
 
 public class ClientEndpoint extends AbstractDBActor {
@@ -47,6 +49,9 @@ public class ClientEndpoint extends AbstractDBActor {
                 SelectAllCommand selectAllCommand = (SelectAllCommand) request.getCommand();
                 selectAllFrom(selectAllCommand, request.getClientRequestId(), request.getLamportId());
                 break;
+            case SELECT_WHERE:
+                SelectWhereCommand selectWhereCommand = (SelectWhereCommand) request.getCommand();
+                selectWhereFrom(selectWhereCommand, request.getClientRequestId(), request.getLamportId());
             default:
                 log.error("Invalid command: {}", request.getCommand().getCommandType());
                 break;
@@ -69,6 +74,12 @@ public class ClientEndpoint extends AbstractDBActor {
     private void selectAllFrom(SelectAllCommand command, String clientRequestId, LamportId lamportId) {
         QueryMetaInfo queryMetaInfo = QueryMetaInfo.newReadMeta(getSender(), clientRequestId, lamportId);
         SelectAllMsg msg = new SelectAllMsg(command.getTableName(), queryMetaInfo);
+        quorumManager.tell(msg, getSelf());
+    }
+
+    private void selectWhereFrom(SelectWhereCommand command, String clientRequestId, LamportId lamportId) {
+        QueryMetaInfo queryMetaInfo = QueryMetaInfo.newReadMeta(getSender(), clientRequestId, lamportId);
+        SelectWhereMsg msg = new SelectWhereMsg(command.getTableName(), command.getWhereFn(), queryMetaInfo);
         quorumManager.tell(msg, getSelf());
     }
 }
