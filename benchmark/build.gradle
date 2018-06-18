@@ -1,13 +1,10 @@
 repositories {
-    mavenCentral()
-    maven {
-        url 'http://kompics.sics.se/maven/repository'
+    flatDir {
+        dirs 'dependencies'
     }
 }
 
 dependencies {
-    compile project(':store')
-    compile 'com.yahoo.ycsb:core:0.1.4'
-
-    testCompile 'junit:junit:4.12'
+    compile files('dependencies/ycsb-core-0.14.0.jar')
+    compile project(path: ':store', configuration: 'shadow')
 }
