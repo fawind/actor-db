@@ -5,5 +5,6 @@ public enum CommandType {
     CREATE_TABLE,
     INSERT_INTO,
     SELECT_ALL,
-    SELECT_WHERE
+    SELECT_WHERE,
+    SELECT
 }
