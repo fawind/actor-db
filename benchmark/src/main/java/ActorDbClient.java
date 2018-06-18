@@ -1,5 +1,6 @@
 import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
+import api.commands.SelectCommand;
 import api.configuration.EnvConfig;
 import client.DatastoreClient;
 import client.config.DatastoreClientModule;
@@ -50,13 +51,18 @@ public class ActorDbClient extends DB {
     @Override
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
         // TODO: Implement where fn
-        return Status.OK;
+        SelectCommand cmd = SelectCommand.builder()
+                .tableName(table)
+                .key(key)
+                .build();
+        CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
+        return checkQuerySuccess(response);
     }
 
     @Override
     public Status scan(String table, String startKey, int recordcount, Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {
         // TODO: Implement range queries
-        return Status.OK;
+        return Status.NOT_IMPLEMENTED;
     }
 
     @Override
