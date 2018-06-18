@@ -1,13 +1,33 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.2'
+    }
+}
+
 allprojects {
-    version '0.1.0-SNAPSHOT'
     apply plugin: 'java'
-}
+    apply plugin: 'com.github.johnrengelman.shadow'
 
-sourceCompatibility = 1.8
+    sourceCompatibility = 1.8
 
-repositories {
-    mavenCentral()
-}
+    version '0.1.0-SNAPSHOT'
 
-dependencies {
+    repositories {
+        mavenCentral()
+    }
+
+    /**
+     * Use shadow jar when building fatJar with Akka
+     * http://www.sureshpw.com/2015/10/building-akka-bundle-with-all.html
+     */
+    shadowJar {
+        transform(AppendingTransformer) {
+            resource = 'reference.conf'
+        }
+    }
 }
