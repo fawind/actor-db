@@ -1,5 +1,6 @@
-package api.commands;
+package api.messages;
 
+import api.commands.Command;
 import api.messages.LamportId;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

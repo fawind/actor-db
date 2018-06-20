@@ -2,7 +2,7 @@ package client.model;
 
 import api.commands.Command;
 import lombok.Data;
-import store.messages.query.QueryResponseMsg;
+import api.messages.QueryResponseMsg;
 
 import java.util.concurrent.CompletableFuture;
 

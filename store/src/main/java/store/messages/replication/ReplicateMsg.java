@@ -1,8 +1,8 @@
 package store.messages.replication;
 
 import api.messages.QueryMetaInfo;
-import store.messages.query.QueryMsg;
-import store.model.Row;
+import api.messages.QueryMsg;
+import api.model.Row;
 
 public class ReplicateMsg extends QueryMsg {
 

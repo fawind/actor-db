@@ -1,7 +1,6 @@
-package store.messages.query;
+package api.messages;
 
-import api.messages.QueryMetaInfo;
-import store.model.Row;
+import api.model.Row;
 
 import java.util.List;
 

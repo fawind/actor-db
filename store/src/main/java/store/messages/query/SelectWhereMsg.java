@@ -1,7 +1,8 @@
 package store.messages.query;
 
 import api.messages.QueryMetaInfo;
-import store.model.Row;
+import api.messages.QueryMsg;
+import api.model.Row;
 
 import java.util.function.Predicate;
 

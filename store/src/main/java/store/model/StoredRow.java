@@ -1,6 +1,7 @@
 package store.model;
 
 import api.messages.LamportId;
+import api.model.Row;
 
 import java.io.Serializable;
 

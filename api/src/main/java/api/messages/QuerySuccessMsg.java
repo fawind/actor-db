@@ -1,6 +1,4 @@
-package store.messages.query;
-
-import api.messages.QueryMetaInfo;
+package api.messages;
 
 public class QuerySuccessMsg extends QueryResponseMsg {
 

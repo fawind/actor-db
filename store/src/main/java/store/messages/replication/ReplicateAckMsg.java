@@ -1,7 +1,7 @@
 package store.messages.replication;
 
 import api.messages.QueryMetaInfo;
-import store.messages.query.QueryMsg;
+import api.messages.QueryMsg;
 
 public class ReplicateAckMsg extends QueryMsg {
 

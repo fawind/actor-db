@@ -1,6 +1,7 @@
 package store.messages.query;
 
 import api.messages.QueryMetaInfo;
+import api.messages.QueryResponseMsg;
 import store.model.StoredRow;
 
 import java.util.List;

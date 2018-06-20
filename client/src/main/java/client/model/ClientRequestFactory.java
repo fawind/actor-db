@@ -1,6 +1,6 @@
 package client.model;
 
-import api.commands.ClientRequest;
+import api.messages.ClientRequest;
 import api.commands.Command;
 import api.messages.LamportId;
 

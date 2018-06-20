@@ -4,11 +4,11 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.cluster.client.ClusterClient;
 import api.AbstractClientActor;
-import api.commands.ClientRequest;
+import api.messages.ClientRequest;
 import client.config.DatastoreClientConfig;
 import client.model.ClientRequestFactory;
 import client.model.CompletableCommand;
-import store.messages.query.QueryResponseMsg;
+import api.messages.QueryResponseMsg;
 
 import java.util.HashMap;
 import java.util.Map;
