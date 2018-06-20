@@ -1,3 +1,12 @@
+apply plugin: 'application'
+
+mainClassName = 'client.CLIMain'
+jar {
+    manifest {
+        attributes 'Main-Class': 'client.CLIMain'
+    }
+}
+
 dependencies {
     compile project(':api')
 

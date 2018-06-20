@@ -1,3 +1,12 @@
+apply plugin: 'application'
+
+mainClassName = 'store.DatastoreMain'
+jar {
+    manifest {
+        attributes 'Main-Class': 'store.DatastoreMain'
+    }
+}
+
 dependencies {
     compile project(':api')
 
