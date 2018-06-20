@@ -1,4 +1,5 @@
 dependencies {
-    compile project(":store")
+    compile project(':api')
+
     compile 'org.jline:jline:3.7.+'
 }

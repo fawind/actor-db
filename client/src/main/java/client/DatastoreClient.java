@@ -8,7 +8,7 @@ import akka.cluster.client.ClusterClientSettings;
 import api.commands.Command;
 import client.model.CompletableCommand;
 import client.config.DatastoreClientConfig;
-import store.messages.query.QueryResponseMsg;
+import api.messages.QueryResponseMsg;
 import client.model.ClientRequestFactory;
 
 import javax.inject.Inject;

@@ -9,9 +9,9 @@ import store.messages.query.CreateTableMsg;
 import store.messages.query.DropTableMsg;
 import store.messages.query.InsertMsg;
 import store.messages.query.InsertRowMsg;
-import store.messages.query.QueryErrorMsg;
-import store.messages.query.QueryMsg;
-import store.messages.query.QuerySuccessMsg;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryMsg;
+import api.messages.QuerySuccessMsg;
 import store.messages.query.SelectAllMsg;
 import store.messages.query.SelectWhereMsg;
 

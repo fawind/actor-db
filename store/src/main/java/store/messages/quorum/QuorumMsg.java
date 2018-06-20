@@ -1,6 +1,6 @@
 package store.messages.quorum;
 
-import store.messages.query.QueryMsg;
+import api.messages.QueryMsg;
 
 import java.io.Serializable;
 

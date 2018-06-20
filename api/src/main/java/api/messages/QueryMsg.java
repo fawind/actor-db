@@ -1,4 +1,4 @@
-package store.messages.query;
+package api.messages;
 
 import akka.actor.ActorRef;
 import api.messages.LamportId;

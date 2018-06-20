@@ -1,6 +1,7 @@
 package store.model;
 
 import api.messages.QueryMetaInfo;
+import api.model.Row;
 
 import java.io.Serializable;
 

@@ -5,12 +5,12 @@ import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
 import store.messages.query.PartialQueryResultMsg;
-import store.messages.query.QueryErrorMsg;
-import store.messages.query.QueryMsg;
-import store.messages.query.QueryResponseMsg;
-import store.messages.query.QueryResultMsg;
-import store.messages.query.QuerySuccessMsg;
-import store.model.Row;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryMsg;
+import api.messages.QueryResponseMsg;
+import api.messages.QueryResultMsg;
+import api.messages.QuerySuccessMsg;
+import api.model.Row;
 import store.model.StoredRow;
 
 import java.util.ArrayList;

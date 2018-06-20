@@ -1,4 +1,4 @@
-package store.model;
+package api.model;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.HashFunction;

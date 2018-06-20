@@ -6,5 +6,6 @@ repositories {
 
 dependencies {
     compile files('dependencies/ycsb-core-0.14.0.jar')
-    compile project(path: ':store', configuration: 'shadow')
+    compile project(path: ':client', configuration: 'shadow')
+    compile project(':api')
 }

@@ -4,10 +4,8 @@ import api.commands.Command;
 import api.configuration.EnvConfig;
 import client.commands.CommandParser;
 import client.config.DatastoreClientModule;
-import store.configuration.DatastoreModule;
-import store.Datastore;
-import store.messages.query.QueryErrorMsg;
-import store.messages.query.QueryResponseMsg;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryResponseMsg;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -32,14 +30,9 @@ public class CLI {
         // TODO: Add configurable run configs for cli-only and local nodes
         EnvConfig datastoreEnv = EnvConfig.withPort(2552);
         EnvConfig clientEnvConfig = EnvConfig.withPort(2553);
-        try (Datastore datastore = DatastoreModule.createInstance(datastoreEnv)) {
-            datastore.start();
-            try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance(clientEnvConfig, datastoreEnv)) {
-                datastoreClient.start();
-                readLines(datastoreClient);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance(clientEnvConfig, datastoreEnv)) {
+            datastoreClient.start();
+            readLines(datastoreClient);
         }
     }
 

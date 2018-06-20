@@ -2,6 +2,8 @@ import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectCommand;
 import api.configuration.EnvConfig;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryResponseMsg;
 import client.DatastoreClient;
 import client.config.DatastoreClientModule;
 import com.google.common.collect.ImmutableList;
@@ -9,8 +11,6 @@ import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.Status;
-import store.messages.query.QueryErrorMsg;
-import store.messages.query.QueryResponseMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

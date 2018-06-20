@@ -2,7 +2,7 @@ package store.actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import api.commands.ClientRequest;
+import api.messages.ClientRequest;
 import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectAllCommand;
@@ -13,7 +13,7 @@ import store.messages.query.CreateTableMsg;
 import store.messages.query.InsertMsg;
 import store.messages.query.SelectAllMsg;
 import store.messages.query.SelectWhereMsg;
-import store.model.Row;
+import api.model.Row;
 
 import java.util.function.Predicate;
 

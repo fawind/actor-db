@@ -1,6 +1,7 @@
 package store.messages.query;
 
 import api.messages.QueryMetaInfo;
+import api.messages.QueryMsg;
 
 public class SelectAllMsg extends QueryMsg {
 

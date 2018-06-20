@@ -12,13 +12,13 @@ import store.messages.partition.SplitPartitionMsg;
 import store.messages.partition.SplitSuccessMsg;
 import store.messages.query.InsertRowMsg;
 import store.messages.query.PartialQueryResultMsg;
-import store.messages.query.QueryErrorMsg;
-import store.messages.query.QueryMsg;
-import store.messages.query.QuerySuccessMsg;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryMsg;
+import api.messages.QuerySuccessMsg;
 import store.messages.query.SelectAllMsg;
 import store.messages.query.SelectWhereMsg;
 import store.model.BlockedRow;
-import store.model.Row;
+import api.model.Row;
 import store.model.StoredRow;
 import store.utils.FIFOCache;
 
