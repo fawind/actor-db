@@ -6,6 +6,9 @@ import client.commands.CommandParser;
 import client.config.DatastoreClientModule;
 import api.messages.QueryErrorMsg;
 import api.messages.QueryResponseMsg;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import lombok.Data;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -15,7 +18,17 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.String.format;
 
-public class CLI {
+public class CLIMain {
+
+    @Data
+    public static class CLIArgs {
+        @Parameter(names = {"--storeHost"}, description = "Host address of the store.")
+        private String storeHost = "127.0.0.1";
+        @Parameter(names = {"--storePort"}, description = "Port of the store.")
+        private int storePort = 2552;
+        @Parameter(names = {"--clientPort"}, description = "Port of the client.")
+        private int clientPort = 2553;
+    }
 
     private static final String PROMPT = "hakkan-db> ";
     private static final String APP_NAME = "hakkan-db";
@@ -23,14 +36,21 @@ public class CLI {
     private LineReader lineReader = LineReaderBuilder.builder().appName(APP_NAME).build();
 
     public static void main(String[] args) {
-        new CLI().run();
+        CLIArgs arguments = new CLIArgs();
+        JCommander.newBuilder()
+                .addObject(arguments)
+                .build()
+                .parse(args);
+        EnvConfig storeEnvConfig = EnvConfig.builder()
+                .hostname(arguments.getStoreHost())
+                .port(arguments.getStorePort())
+                .build();
+        EnvConfig clientEnvConfig = EnvConfig.withPort(arguments.getClientPort());
+        new CLIMain().run(storeEnvConfig, clientEnvConfig);
     }
 
-    public void run() {
-        // TODO: Add configurable run configs for cli-only and local nodes
-        EnvConfig datastoreEnv = EnvConfig.withPort(2552);
-        EnvConfig clientEnvConfig = EnvConfig.withPort(2553);
-        try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance(clientEnvConfig, datastoreEnv)) {
+    public void run(EnvConfig storeEnvConfig, EnvConfig clientEnvConfig) {
+        try (DatastoreClient datastoreClient = DatastoreClientModule.createInstance(clientEnvConfig, storeEnvConfig)) {
             datastoreClient.start();
             readLines(datastoreClient);
         }
