@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":store")
+    compile 'org.jline:jline:3.7.+'
+}

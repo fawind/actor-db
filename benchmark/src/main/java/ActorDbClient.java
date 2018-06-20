@@ -9,8 +9,8 @@ import com.yahoo.ycsb.ByteIterator;
 import com.yahoo.ycsb.DB;
 import com.yahoo.ycsb.DBException;
 import com.yahoo.ycsb.Status;
-import messages.query.QueryErrorMsg;
-import messages.query.QueryResponseMsg;
+import store.messages.query.QueryErrorMsg;
+import store.messages.query.QueryResponseMsg;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
