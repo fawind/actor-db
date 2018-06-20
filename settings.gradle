@@ -1,4 +1,6 @@
 rootProject.name = 'actor-db'
 
+include 'api'
 include 'store'
+include 'client'
 include 'benchmark'

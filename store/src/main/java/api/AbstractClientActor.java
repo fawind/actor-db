@@ -3,7 +3,7 @@ package api;
 import akka.actor.AbstractActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import messages.query.QueryResponseMsg;
+import store.messages.query.QueryResponseMsg;
 
 public abstract class AbstractClientActor extends AbstractActor {
 
