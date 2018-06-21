@@ -25,7 +25,7 @@ public class Row implements Comparable<Row>, Serializable {
             throw new RuntimeException("Cannot create empty row");
         }
         this.values = new ArrayList<>(Arrays.asList(values));
-        this.hashKey = HASH_FUNCTION.hashString(String.valueOf(this.values.get(0)), Charsets.UTF_8).asLong();
+        this.hashKey = hash(String.valueOf(this.values.get(0)));
     }
 
     public List<String> getValues() {
@@ -49,6 +49,10 @@ public class Row implements Comparable<Row>, Serializable {
 
     public long getHashKey() {
         return hashKey;
+    }
+
+    public static long hash(String toHash) {
+        return HASH_FUNCTION.hashString(toHash, Charsets.UTF_8).asLong();
     }
 
     @Override

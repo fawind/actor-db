@@ -3,7 +3,9 @@ package store.actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import api.messages.LamportId;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Range;
+import store.messages.SelectKeyMsg;
 import store.messages.partition.PartialSplitSuccessMsg;
 import store.messages.partition.PartitionBlockedMsg;
 import store.messages.partition.PartitionFullMsg;
@@ -22,6 +24,7 @@ import api.model.Row;
 import store.model.StoredRow;
 import store.utils.FIFOCache;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,10 +38,7 @@ public class Partition extends AbstractDBActor {
 
     private final int CAPACITY = 100;
 
-    private final int partitionId;
     private final ActorRef table;
-
-    private final Set<LamportId> seenTransactions = FIFOCache.newSet(1024);
 
     private boolean isFull = false;
 
@@ -46,15 +46,14 @@ public class Partition extends AbstractDBActor {
     private Map<Long, StoredRow> rows;
 
 
-    private Partition(int partitionId, Range<Long> startRange, ActorRef table) {
-        this.partitionId = partitionId;
+    private Partition(Range<Long> startRange, ActorRef table) {
         this.range = startRange;
         this.table = table;
         this.rows = new HashMap<>(CAPACITY);
     }
 
-    public static Props props(int partitionId, Range<Long> startRange, ActorRef table) {
-        return Props.create(Partition.class, () -> new Partition(partitionId, startRange, table));
+    public static Props props(Range<Long> startRange, ActorRef table) {
+        return Props.create(Partition.class, () -> new Partition(startRange, table));
     }
 
     @Override
@@ -63,6 +62,7 @@ public class Partition extends AbstractDBActor {
                 // Querying
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
+                .match(SelectKeyMsg.class, this::handleSelectKey)
                 .match(InsertRowMsg.class, this::handleInsert)
 
                 // Partitioning
@@ -75,19 +75,27 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleSelectAll(SelectAllMsg msg) {
-        if (seenTransaction(msg)) return;
-
         List<StoredRow> resultRows = new ArrayList<>(rows.values());
         getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
-        if (seenTransaction(msg)) return;
-
         Predicate<Row> whereFn = msg.getWhereFn();
         List<StoredRow> resultRows = rows.values().stream()
                 .filter(storedRow -> whereFn.test(storedRow.getRow()))
                 .collect(Collectors.toList());
+        getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
+    }
+
+    private void handleSelectKey(SelectKeyMsg msg) {
+        long hashKey = Row.hash(msg.getKey());
+        StoredRow result = rows.get(hashKey);
+
+        List<StoredRow> resultRows = new ArrayList<>(1);
+        if (result != null) {
+            resultRows.add(result);
+        }
+
         getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
     }
 
@@ -161,10 +169,6 @@ public class Partition extends AbstractDBActor {
         rows = rowsToKeep.stream().collect(Collectors.toMap(sr -> sr.getRow().getHashKey(), sr -> sr));
         isFull = false;
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());
-    }
-
-    private boolean seenTransaction(QueryMsg msg) {
-        return !seenTransactions.add(msg.getLamportId());
     }
 
     private List<StoredRow> getSortedStoredRows() {

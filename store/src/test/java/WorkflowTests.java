@@ -1,6 +1,7 @@
 import api.commands.CreateTableCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectAllCommand;
+import api.commands.SelectCommand;
 import api.configuration.EnvConfig;
 import client.DatastoreClient;
 import client.config.DatastoreClientModule;
@@ -137,6 +138,31 @@ public class WorkflowTests {
         for (int i = 0; i < rows.size(); i++) {
             assertThat(rows.get(i).getValues()).isEqualTo(values.get(i));
         }
+    }
+
+    @Test
+    public void givenSelectKeyCmdThenReceiveMatchedRow() throws Exception {
+        // GIVEN
+        List<List<String>> values = ImmutableList.of(
+                ImmutableList.of("1", "val1"),
+                ImmutableList.of("2", "val2"),
+                ImmutableList.of("3", "val3"));
+        createDefaultTable();
+        insertValues(DEFAULT_TABLE_NAME, values);
+
+        // WHEN
+        SelectCommand command = SelectCommand.builder()
+                .tableName(DEFAULT_TABLE_NAME)
+                .key("2")
+                .build();
+        CompletableFuture<QueryResponseMsg> response = client.sendRequest(command);
+
+        // THEN
+        assertThat(response.get()).isInstanceOf(QueryResultMsg.class);
+        QueryResultMsg queryResponse = (QueryResultMsg) response.get();
+        ImmutableList<Row> rows = sortRowsByKey(queryResponse.getResult());
+        assertThat(rows.size()).isEqualTo(1);
+        assertThat(rows.get(0).getValues()).isEqualTo(values.get(1));
     }
 
     @Test

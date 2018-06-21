@@ -5,6 +5,7 @@ import akka.actor.PoisonPill;
 import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
+import store.messages.SelectKeyMsg;
 import store.messages.query.CreateTableMsg;
 import store.messages.query.DropTableMsg;
 import store.messages.query.InsertMsg;
@@ -43,6 +44,7 @@ public class Master extends AbstractDBActor {
                 .match(InsertMsg.class, this::handleInsert)
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
+                .match(SelectKeyMsg.class, this::handleSelectKey)
                 .match(DropTableMsg.class, this::handleDropTable)
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
@@ -90,6 +92,11 @@ public class Master extends AbstractDBActor {
     }
 
     private void handleSelectWhere(SelectWhereMsg msg) {
+        Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
+        table.ifPresent(t -> tellWithResponseLamportId(t, msg));
+    }
+
+    private void handleSelectKey(SelectKeyMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
         table.ifPresent(t -> tellWithResponseLamportId(t, msg));
     }
