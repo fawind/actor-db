@@ -9,6 +9,7 @@ import api.commands.SelectAllCommand;
 import api.commands.SelectCommand;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
+import store.messages.SelectKeyMsg;
 import store.messages.query.CreateTableMsg;
 import store.messages.query.InsertMsg;
 import store.messages.query.SelectAllMsg;
@@ -54,6 +55,7 @@ public class ClientEndpoint extends AbstractDBActor {
             case SELECT:
                 SelectCommand selectCommand = (SelectCommand) request.getCommand();
                 selectFrom(selectCommand, request.getClientRequestId(), request.getLamportId());
+                break;
             default:
                 log.error("Invalid command: {}", request.getCommand().getCommandType());
                 break;
@@ -81,8 +83,7 @@ public class ClientEndpoint extends AbstractDBActor {
 
     private void selectFrom(SelectCommand command, String clientRequestId, LamportId lamportId) {
         QueryMetaInfo queryMetaInfo = QueryMetaInfo.newReadMeta(getSender(), clientRequestId, lamportId);
-        Predicate<Row> whereFn = (row) -> row.getKey().equals(command.getKey());
-        SelectWhereMsg msg = new SelectWhereMsg(command.getTableName(), whereFn, queryMetaInfo);
+        SelectKeyMsg msg = new SelectKeyMsg(command.getTableName(), command.getKey(), queryMetaInfo);
         quorumManager.tell(msg, getSelf());
     }
 }
