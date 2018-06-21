@@ -92,7 +92,6 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleInsert(InsertRowMsg msg) {
-        if (seenTransaction(msg)) return;
         Row newRow = msg.getRow();
 
         if (isFull) {
@@ -148,8 +147,10 @@ public class Partition extends AbstractDBActor {
     }
 
     private void handleSplitInsert(SplitInsertMsg msg) {
-        rows = msg.getRows().stream().collect(Collectors.toMap(sr -> sr.getRow().getHashKey(), sr -> sr));
-        log.debug("Inserted {} new rows from split", rows.size());
+        for (StoredRow sr : msg.getRows()) {
+            rows.put(sr.getRow().getHashKey(), sr);
+        }
+        log.debug("Inserted {} new rows from split", msg.getRows().size());
         getSender().tell(new PartialSplitSuccessMsg(getSelf(), range), getSelf());
     }
 

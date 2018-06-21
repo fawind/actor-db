@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -138,13 +139,33 @@ public class WorkflowTests {
         }
     }
 
+    @Test
+    public void testPartitionSplit() throws Exception {
+        // GIVEN
+        createDefaultTable();
+
+        // WHEN
+        List<List<String>> values = IntStream.range(0, 500)
+                .mapToObj(i -> ImmutableList.of(String.valueOf(i), "value"))
+                .collect(toImmutableList());
+        List<CompletableFuture<QueryResponseMsg>> responses = insertValues(DEFAULT_TABLE_NAME, values);
+
+        // THEN
+        for (CompletableFuture<QueryResponseMsg> response : responses) {
+            assertThat(response.get()).isInstanceOf(QuerySuccessMsg.class);
+        }
+    }
+
+    // =========
+    //  HELPER
+    // =========
+
     private void createDefaultTable() throws ExecutionException, InterruptedException {
         CompletableFuture<QueryResponseMsg> createTableResponse = client.sendRequest(DEFAULT_CREATE_TABLE_CMD);
         assertThat(createTableResponse.get()).isInstanceOf(QuerySuccessMsg.class);
     }
 
-    private List<CompletableFuture<QueryResponseMsg>> insertValues(String tableName, List<List<String>> rows)
-            throws ExecutionException, InterruptedException {
+    private List<CompletableFuture<QueryResponseMsg>> insertValues(String tableName, List<List<String>> rows) {
         List<CompletableFuture<QueryResponseMsg>> responses = new ArrayList<>();
         for (List<String> row : rows) {
             InsertIntoCommand command = InsertIntoCommand.builder()
@@ -153,7 +174,7 @@ public class WorkflowTests {
                     .build();
             responses.add(client.sendRequest(command));
         }
-        CompletableFuture.allOf(responses.toArray(new CompletableFuture[0])).get();
+
         return responses;
     }
 
