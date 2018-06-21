@@ -123,7 +123,7 @@ public class ActorDbClient extends DB {
     private void createDefaultTable(String tableName) throws DBException {
         CreateTableCommand cmd = CreateTableCommand.builder()
                 .tableName(tableName)
-                .schema(ImmutableList.of("string", "string", "string"))
+                .schema(ImmutableList.of("string", "string"))
                 .build();
         CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
         Status status = checkQuerySuccess(response);
