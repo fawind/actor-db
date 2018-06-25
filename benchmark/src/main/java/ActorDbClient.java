@@ -34,9 +34,10 @@ public class ActorDbClient extends DB {
     public void init() throws DBException {
         Properties props = getProperties();
         int clientPort = Integer.valueOf(props.getProperty("clientPort"));
+        String storeIp = String.valueOf(props.getProperty("storeIp"));
         int storePort = Integer.valueOf(props.getProperty("storePort"));
         EnvConfig clientEnvConfig = EnvConfig.withPort(clientPort);
-        EnvConfig storeEnvConfig = EnvConfig.withPort(storePort);
+        EnvConfig storeEnvConfig = EnvConfig.withIpAndPort(storeIp, storePort);
         client = DatastoreClientModule.createInstance(clientEnvConfig, storeEnvConfig);
         client.start();
 
