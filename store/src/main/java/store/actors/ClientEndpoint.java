@@ -2,21 +2,20 @@ package store.actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import api.messages.ClientRequest;
 import api.commands.CreateTableCommand;
+import api.commands.DeleteCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectAllCommand;
 import api.commands.SelectCommand;
+import api.messages.ClientRequest;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
-import store.messages.SelectKeyMsg;
+import api.model.Row;
 import store.messages.query.CreateTableMsg;
+import store.messages.query.DeleteKeyMsg;
 import store.messages.query.InsertMsg;
 import store.messages.query.SelectAllMsg;
-import store.messages.query.SelectWhereMsg;
-import api.model.Row;
-
-import java.util.function.Predicate;
+import store.messages.query.SelectKeyMsg;
 
 public class ClientEndpoint extends AbstractDBActor {
 
@@ -56,6 +55,10 @@ public class ClientEndpoint extends AbstractDBActor {
                 SelectCommand selectCommand = (SelectCommand) request.getCommand();
                 selectFrom(selectCommand, request.getClientRequestId(), request.getLamportId());
                 break;
+            case DELETE:
+                DeleteCommand deleteCommand = (DeleteCommand) request.getCommand();
+                delete(deleteCommand, request.getClientRequestId(), request.getLamportId());
+                break;
             default:
                 log.error("Invalid command: {}", request.getCommand().getCommandType());
                 break;
@@ -84,6 +87,12 @@ public class ClientEndpoint extends AbstractDBActor {
     private void selectFrom(SelectCommand command, String clientRequestId, LamportId lamportId) {
         QueryMetaInfo queryMetaInfo = QueryMetaInfo.newReadMeta(getSender(), clientRequestId, lamportId);
         SelectKeyMsg msg = new SelectKeyMsg(command.getTableName(), command.getKey(), queryMetaInfo);
+        quorumManager.tell(msg, getSelf());
+    }
+
+    private void delete(DeleteCommand command, String clientRequestId, LamportId lamportId) {
+        QueryMetaInfo queryMetaInfo = QueryMetaInfo.newWriteMeta(getSender(), clientRequestId, lamportId);
+        DeleteKeyMsg msg = new DeleteKeyMsg(command.getTableName(), command.getKey(), queryMetaInfo);
         quorumManager.tell(msg, getSelf());
     }
 }

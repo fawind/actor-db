@@ -1,11 +1,11 @@
 package store;
 
-import store.actors.ClientEndpoint;
-import store.actors.Master;
-import store.actors.QuorumManager;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.client.ClusterClientReceptionist;
+import store.actors.ClientEndpoint;
+import store.actors.Master;
+import store.actors.QuorumManager;
 import store.configuration.DatastoreConfig;
 
 import javax.inject.Inject;

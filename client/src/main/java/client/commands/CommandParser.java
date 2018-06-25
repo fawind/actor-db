@@ -2,6 +2,7 @@ package client.commands;
 
 import api.commands.Command;
 import api.commands.CreateTableCommand;
+import api.commands.DeleteCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.InvalidCommand;
 import api.commands.SelectAllCommand;
@@ -15,6 +16,7 @@ public class CommandParser {
             .match("create", CommandParser::getCreateTableCommand)
             .match("insert", CommandParser::getInsertIntoCommand)
             .match("select", CommandParser::getSelectAllCommand)
+            .match("delete", CommandParser::getDeleteCommand)
             .build();
 
     public static Command fromLine(String line) {
@@ -61,5 +63,15 @@ public class CommandParser {
             throw new IllegalArgumentException("Invalid argument count");
         }
         return SelectAllCommand.builder().tableName(parts.get(1)).build();
+    }
+
+    /**
+     * DELETE {tableName} {key}
+     */
+    private static DeleteCommand getDeleteCommand(List<String> parts) {
+        if (parts.size() != 3) {
+            throw new IllegalArgumentException("Invalid argument count");
+        }
+        return DeleteCommand.builder().tableName(parts.get(1)).key(parts.get(2)).build();
     }
 }

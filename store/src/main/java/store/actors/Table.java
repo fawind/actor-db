@@ -5,19 +5,19 @@ import akka.actor.Props;
 import api.messages.QueryErrorMsg;
 import api.messages.QuerySuccessMsg;
 import api.model.Row;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import store.messages.SelectKeyMsg;
 import store.messages.partition.PartitionBlockedMsg;
 import store.messages.partition.PartitionFullMsg;
 import store.messages.partition.SplitPartitionMsg;
 import store.messages.partition.SplitSuccessMsg;
+import store.messages.query.DeleteKeyMsg;
 import store.messages.query.InsertRowMsg;
 import store.messages.query.SelectAllMsg;
+import store.messages.query.SelectKeyMsg;
 import store.messages.query.SelectWhereMsg;
 import store.model.BlockedRow;
 
@@ -55,6 +55,7 @@ public class Table extends AbstractDBActor {
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
                 .match(SelectKeyMsg.class, this::handleSelectKey)
+                .match(DeleteKeyMsg.class, this::handleDeleteKey)
                 .match(InsertRowMsg.class, this::handleInsert)
                 .match(QuerySuccessMsg.class, this::handleQuerySuccess)
 
@@ -83,9 +84,16 @@ public class Table extends AbstractDBActor {
         partition.tell(msg, getSender());
     }
 
+    private void handleDeleteKey(DeleteKeyMsg msg) {
+        long hashKey = Row.hash(msg.getKey());
+        ActorRef partition = partitions.get(hashKey);
+        partition.tell(msg, getSender());
+    }
+
     private void handleInsert(InsertRowMsg msg) {
         if (msg.getRow().getValues().size() != layout.size()) {
-            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + " columns but got " +
+            msg.getRequester().tell(new QueryErrorMsg("Insert mismatch! Expected " + layout.size() + " columns but " +
+                    "got " +
                     msg.getRow().getValues().size(), msg.getQueryMetaInfo()), getSelf());
         }
         ActorRef partition = partitions.get(msg.getRow().getHashKey());

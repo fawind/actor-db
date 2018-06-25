@@ -3,34 +3,32 @@ package store.actors;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import api.messages.LamportId;
-import com.google.common.base.Charsets;
+import api.messages.QueryErrorMsg;
+import api.messages.QueryResponseMsg;
+import api.messages.QuerySuccessMsg;
+import api.model.Row;
+import api.model.TombstoneRow;
 import com.google.common.collect.Range;
-import store.messages.SelectKeyMsg;
 import store.messages.partition.PartialSplitSuccessMsg;
 import store.messages.partition.PartitionBlockedMsg;
 import store.messages.partition.PartitionFullMsg;
 import store.messages.partition.SplitInsertMsg;
 import store.messages.partition.SplitPartitionMsg;
 import store.messages.partition.SplitSuccessMsg;
+import store.messages.query.DeleteKeyMsg;
 import store.messages.query.InsertRowMsg;
 import store.messages.query.PartialQueryResultMsg;
-import api.messages.QueryErrorMsg;
-import api.messages.QueryMsg;
-import api.messages.QuerySuccessMsg;
 import store.messages.query.SelectAllMsg;
+import store.messages.query.SelectKeyMsg;
 import store.messages.query.SelectWhereMsg;
 import store.model.BlockedRow;
-import api.model.Row;
 import store.model.StoredRow;
-import store.utils.FIFOCache;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -63,6 +61,7 @@ public class Partition extends AbstractDBActor {
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
                 .match(SelectKeyMsg.class, this::handleSelectKey)
+                .match(DeleteKeyMsg.class, this::handleDeleteKey)
                 .match(InsertRowMsg.class, this::handleInsert)
 
                 // Partitioning
@@ -99,6 +98,32 @@ public class Partition extends AbstractDBActor {
         getSender().tell(new PartialQueryResultMsg(resultRows, msg.getQueryMetaInfo()), getSelf());
     }
 
+    private void handleDeleteKey(DeleteKeyMsg msg) {
+        String rowKey = msg.getKey();
+        long hashKey = Row.hash(rowKey);
+        StoredRow previousEntry = rows.get(hashKey);
+
+        QueryResponseMsg response;
+        if (previousEntry != null) {
+            LamportId oldLamportId = previousEntry.getLamportId();
+
+            // We have a newer version stored already (last-write-wins)
+            if (oldLamportId.isGreaterThan(msg.getLamportId())) {
+                String error = "Newer version of key '" + rowKey + "' exists (" + oldLamportId + ")";
+                response = new QueryErrorMsg(error, msg.getQueryMetaInfo());
+            } else {
+                StoredRow tombstone = new StoredRow(new TombstoneRow(rowKey), msg.getLamportId());
+                rows.put(hashKey, tombstone);
+                response = new QuerySuccessMsg(msg.getQueryMetaInfo());
+            }
+        } else {
+            // Key doesn't exist
+            response = new QueryErrorMsg("No such key to delete: " + rowKey, msg.getQueryMetaInfo());
+        }
+
+        getSender().tell(response, getSelf());
+    }
+
     private void handleInsert(InsertRowMsg msg) {
         Row newRow = msg.getRow();
 
@@ -118,7 +143,6 @@ public class Partition extends AbstractDBActor {
 
             // We have a newer version stored already (last-write-wins)
             if (oldLamportId.isGreaterThan(msg.getLamportId())) {
-                // TODO: is this correct
                 String error = "Newer version of key '" + newRow.getKey() + "' exists (" + oldLamportId + ")";
                 getSender().tell(new QueryErrorMsg(error, msg.getQueryMetaInfo()), getSelf());
                 return;

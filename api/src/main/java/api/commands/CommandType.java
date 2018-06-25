@@ -6,5 +6,6 @@ public enum CommandType {
     INSERT_INTO,
     SELECT_ALL,
     SELECT_WHERE,
-    SELECT
+    SELECT,
+    DELETE
 }

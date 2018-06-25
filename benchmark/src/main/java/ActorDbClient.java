@@ -1,4 +1,5 @@
 import api.commands.CreateTableCommand;
+import api.commands.DeleteCommand;
 import api.commands.InsertIntoCommand;
 import api.commands.SelectCommand;
 import api.configuration.EnvConfig;
@@ -97,10 +98,9 @@ public class ActorDbClient extends DB {
 
     @Override
     public Status delete(String table, String key) {
-        // TODO: Implement delete
-        InsertIntoCommand cmd = InsertIntoCommand.builder()
+        DeleteCommand cmd = DeleteCommand.builder()
                 .tableName(table)
-                .values(ImmutableList.of(key, "TOMBSTONE"))
+                .key(key)
                 .build();
         CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
         return checkQuerySuccess(response);

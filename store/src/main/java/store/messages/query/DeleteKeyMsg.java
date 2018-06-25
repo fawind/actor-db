@@ -1,17 +1,17 @@
-package store.messages;
+package store.messages.query;
 
 import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
 
-public class SelectKeyMsg extends QueryMsg {
+public class DeleteKeyMsg extends QueryMsg {
 
     private String tableName;
     private String key;
 
     // Used for serialization
-    private SelectKeyMsg() {}
+    private DeleteKeyMsg() {}
 
-    public SelectKeyMsg(String tableName, String key, QueryMetaInfo queryMetaInfo) {
+    public DeleteKeyMsg(String tableName, String key, QueryMetaInfo queryMetaInfo) {
         super(queryMetaInfo);
         this.tableName = tableName;
         this.key = key;

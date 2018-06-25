@@ -4,21 +4,9 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
-import store.messages.query.PartialQueryResultMsg;
-import api.messages.QueryErrorMsg;
 import api.messages.QueryMsg;
-import api.messages.QueryResponseMsg;
-import api.messages.QueryResultMsg;
-import api.messages.QuerySuccessMsg;
-import api.model.Row;
-import store.model.StoredRow;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * This class deals with all quorum-related matters. It is aware of all master nodes in the network.

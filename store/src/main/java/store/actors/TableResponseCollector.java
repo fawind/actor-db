@@ -2,6 +2,7 @@ package store.actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import api.messages.LamportId;
 import store.messages.query.PartialQueryResultMsg;
 import store.model.StoredRow;
 
@@ -16,6 +17,8 @@ public class TableResponseCollector extends AbstractDBActor {
 
     private final List<StoredRow> runningQueryResults;
 
+    private LamportId newestLamportId = LamportId.INVALID_LAMPORT_ID;
+
     private TableResponseCollector(ActorRef quorumManager, Set<ActorRef> queriedPartitions) {
         this.quorumManager = quorumManager;
         this.queriedPartitions = queriedPartitions;
@@ -24,7 +27,8 @@ public class TableResponseCollector extends AbstractDBActor {
     }
 
     static Props props(ActorRef quorumManager, Set<ActorRef> queriedPartitions) {
-        return Props.create(TableResponseCollector.class, () -> new TableResponseCollector(quorumManager, queriedPartitions));
+        return Props.create(TableResponseCollector.class, () -> new TableResponseCollector(quorumManager,
+                queriedPartitions));
     }
 
     @Override
@@ -40,10 +44,14 @@ public class TableResponseCollector extends AbstractDBActor {
 
         queriedPartitions.remove(getSender());
 
+        // We want to return the newest one to the quorum manager
+        newestLamportId = newestLamportId.max(msg.getLamportId());
+
         if (!queriedPartitions.isEmpty()) return;
 
         // Seen all results, pass result to quorumManager
-        quorumManager.tell(new PartialQueryResultMsg(runningQueryResults, msg.getQueryMetaInfo()), ActorRef.noSender());
+        quorumManager.tell(new PartialQueryResultMsg(runningQueryResults, msg.getQueryMetaInfo()
+                .copyWithResponseLamportId(newestLamportId)), ActorRef.noSender());
 
         // The collector has finished its job so it can be destroyed
         getContext().stop(getSelf());
