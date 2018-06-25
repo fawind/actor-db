@@ -25,7 +25,7 @@ public class Row implements Comparable<Row>, Serializable {
             throw new RuntimeException("Cannot create empty row");
         }
         this.values = new ArrayList<>(Arrays.asList(values));
-        this.hashKey = hash(String.valueOf(this.values.get(0)));
+        this.hashKey = hash(getAt(0));
     }
 
     public List<String> getValues() {
@@ -34,13 +34,6 @@ public class Row implements Comparable<Row>, Serializable {
 
     public <ResultType> ResultType getAt(int columnIndex) {
         return (ResultType) values.get(columnIndex);
-    }
-
-    public void updateAt(int columnIndex, String value) {
-        if (columnIndex == 0) {
-            // TODO: cannot update key column
-        }
-        values.set(columnIndex, value);
     }
 
     public String getKey() {

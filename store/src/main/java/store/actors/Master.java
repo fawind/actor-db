@@ -4,16 +4,17 @@ import akka.actor.ActorRef;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
 import api.messages.LamportId;
+import api.messages.QueryErrorMsg;
 import api.messages.QueryMetaInfo;
-import store.messages.SelectKeyMsg;
+import api.messages.QueryMsg;
+import api.messages.QuerySuccessMsg;
 import store.messages.query.CreateTableMsg;
+import store.messages.query.DeleteKeyMsg;
 import store.messages.query.DropTableMsg;
 import store.messages.query.InsertMsg;
 import store.messages.query.InsertRowMsg;
-import api.messages.QueryErrorMsg;
-import api.messages.QueryMsg;
-import api.messages.QuerySuccessMsg;
 import store.messages.query.SelectAllMsg;
+import store.messages.query.SelectKeyMsg;
 import store.messages.query.SelectWhereMsg;
 
 import java.util.HashMap;
@@ -45,6 +46,7 @@ public class Master extends AbstractDBActor {
                 .match(SelectAllMsg.class, this::handleSelectAll)
                 .match(SelectWhereMsg.class, this::handleSelectWhere)
                 .match(SelectKeyMsg.class, this::handleSelectKey)
+                .match(DeleteKeyMsg.class, this::handleDeleteKey)
                 .match(DropTableMsg.class, this::handleDropTable)
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
@@ -97,6 +99,11 @@ public class Master extends AbstractDBActor {
     }
 
     private void handleSelectKey(SelectKeyMsg msg) {
+        Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
+        table.ifPresent(t -> tellWithResponseLamportId(t, msg));
+    }
+
+    private void handleDeleteKey(DeleteKeyMsg msg) {
         Optional<ActorRef> table = assertTableExists(msg.getTableName(), msg);
         table.ifPresent(t -> tellWithResponseLamportId(t, msg));
     }

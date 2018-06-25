@@ -5,10 +5,12 @@ import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryErrorMsg;
 import api.messages.QueryMetaInfo;
+import api.messages.QueryMsg;
 import api.messages.QueryResponseMsg;
 import api.messages.QueryResultMsg;
 import api.messages.QuerySuccessMsg;
 import api.model.Row;
+import api.model.TombstoneRow;
 import store.messages.query.PartialQueryResultMsg;
 import store.model.StoredRow;
 
@@ -24,6 +26,8 @@ public class QuorumResponseCollector extends AbstractDBActor {
     private final int quorumSize;
 
     private final List<QueryResponseMsg> quorumResponses;
+
+    private LamportId newestLamportId = LamportId.INVALID_LAMPORT_ID;
 
     public QuorumResponseCollector(ActorRef client, int quorumSize) {
         this.client = client;
@@ -45,9 +49,11 @@ public class QuorumResponseCollector extends AbstractDBActor {
     }
 
     private void handleQueryResponseMsg(QueryResponseMsg msg) {
+        newestLamportId = newestLamportId.max(msg.getLamportId());
+
         // For now, if we see an error we assume everything is an error
         if (msg instanceof QueryErrorMsg) {
-            client.tell(msg, ActorRef.noSender());
+            tellWithNewestResponseLamportId(msg);
             getContext().stop(getSelf());
             return;
         }
@@ -58,7 +64,7 @@ public class QuorumResponseCollector extends AbstractDBActor {
 
         // Seen all results, pass result to quorumManager
         QueryResponseMsg quorumResponse = getQuorumResponse();
-        client.tell(quorumResponse, ActorRef.noSender());
+        tellWithNewestResponseLamportId(quorumResponse);
 
         // The collector has finished its job so it can be destroyed
         getContext().stop(getSelf());
@@ -98,12 +104,28 @@ public class QuorumResponseCollector extends AbstractDBActor {
             }
         }
 
-        List<Row> resultRows = resultRowsMap.values().stream().map(StoredRow::getRow).collect(Collectors.toList());
+        List<Row> resultRows = resultRowsMap.values().stream()
+                .filter(sr -> !(sr.getRow() instanceof TombstoneRow))
+                .map(StoredRow::getRow).collect(Collectors.toList());
         return new QueryResultMsg(resultRows, quorumResponses.get(0).getQueryMetaInfo());
     }
 
     private QueryResponseMsg getSuccessQuorum() {
         // All queries returned success, so we can return any one of them
         return quorumResponses.get(0);
+    }
+
+    private void tellWithNewestResponseLamportId(QueryMsg msg) {
+        msg.updateMetaInfo(addResponseLamportIdToMeta(msg.getQueryMetaInfo()));
+        client.tell(msg, ActorRef.noSender());
+    }
+
+    private QueryMetaInfo addResponseLamportIdToMeta(QueryMetaInfo metaInfo) {
+        return metaInfo.copyWithResponseLamportId(updatedLamportId(metaInfo.getLamportId()));
+    }
+
+    private LamportId updatedLamportId(LamportId other) {
+        newestLamportId = newestLamportId.maxIdCopy(other);
+        return newestLamportId;
     }
 }
