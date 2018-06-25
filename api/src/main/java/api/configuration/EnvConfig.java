@@ -15,6 +15,10 @@ public class EnvConfig {
         return EnvConfig.builder().build();
     }
 
+    public static EnvConfig withIpAndPort(String ip, int port) {
+        return EnvConfig.builder().hostname(ip).port(port).build();
+    }
+
     public static EnvConfig withPort(int port) {
         return EnvConfig.builder().port(port).build();
     }
