@@ -14,6 +14,9 @@ public class QueryMetaInfo implements Serializable {
     private String clientRequestId;
     private LamportId responseLamportId = LamportId.INVALID_LAMPORT_ID;
 
+    // Used for serialization
+    private QueryMetaInfo() {}
+
     private QueryMetaInfo(ActorRef requester, LamportId lamportId, String clientRequestId, QueryType queryType) {
         this.requester = requester;
         this.lamportId = lamportId;
