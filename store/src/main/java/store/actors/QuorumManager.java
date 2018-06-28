@@ -44,7 +44,7 @@ public class QuorumManager extends AbstractDBActor {
         QueryMetaInfo meta = addNewLamportId(msg.getQueryMetaInfo());
         msg.updateMetaInfo(meta);
 
-        int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? config.getWriteQuorum() : config.getReadQuorum();
+        int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? config.getEnvConfig().getWriteQuorum() : config.getEnvConfig().getReadQuorum();
         ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize));
 
         memberRegistry.getMasters()

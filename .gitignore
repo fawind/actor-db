@@ -1,3 +1,6 @@
+# Custom config overrides
+datastore.properties
+
 # Gradle
 .gradle
 gradlew.bat
@@ -11,6 +14,7 @@ out
 
 # Native files
 native
+bin
 
 # Idea files
 .idea

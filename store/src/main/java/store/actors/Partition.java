@@ -46,7 +46,7 @@ public class Partition extends AbstractDBActor {
 
     private Partition(Range<Long> startRange, ActorRef table) {
         DatastoreConfig config = DatastoreModule.inject(DatastoreConfig.class);
-        this.capacity = config.getPartitionCapacity();
+        this.capacity = config.getEnvConfig().getPartitionCapacity();
         this.range = startRange;
         this.table = table;
         this.rows = new HashMap<>(capacity);

@@ -9,6 +9,11 @@ import com.google.inject.Provides;
 import com.typesafe.config.Config;
 import store.Datastore;
 
+import java.util.MissingResourceException;
+import java.util.Optional;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+
 public class DatastoreModule extends AbstractModule {
 
     private static final String AKKA_REMOTE_CONFIG = "akka.conf";
