@@ -9,6 +9,8 @@ import api.messages.QuerySuccessMsg;
 import api.model.Row;
 import api.model.TombstoneRow;
 import com.google.common.collect.Range;
+import store.configuration.DatastoreConfig;
+import store.configuration.DatastoreModule;
 import store.messages.partition.PartialSplitSuccessMsg;
 import store.messages.partition.PartitionBlockedMsg;
 import store.messages.partition.PartitionFullMsg;
@@ -36,18 +38,18 @@ public class Partition extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "partition";
 
-    private final int CAPACITY = 10000;
+    private final int capacity;
     private final ActorRef table;
     private boolean isFull = false;
-
     private Range<Long> range;
     private Map<Long, StoredRow> rows;
 
-
     private Partition(Range<Long> startRange, ActorRef table) {
+        DatastoreConfig config = DatastoreModule.inject(DatastoreConfig.class);
+        this.capacity = config.getPartitionCapacity();
         this.range = startRange;
         this.table = table;
-        this.rows = new HashMap<>(CAPACITY);
+        this.rows = new HashMap<>(capacity);
     }
 
     public static Props props(Range<Long> startRange, ActorRef table) {
@@ -152,12 +154,12 @@ public class Partition extends AbstractDBActor {
         rows.put(newHashKey, new StoredRow(newRow, msg.getLamportId()));
         log.debug("({}) Added row: {}", msg.getLamportId(), newRow);
 
-        if (rows.size() == CAPACITY) {
+        if (rows.size() == capacity) {
             isFull = true;
             List<Long> allRows = new ArrayList<>(rows.keySet());
             allRows.sort(Comparator.naturalOrder());
 
-            long medianKey = allRows.get(CAPACITY / 2);
+            long medianKey = allRows.get(capacity / 2);
             long lowestInNewPartition = rows.get(medianKey).getRow().getHashKey();
 
             Range<Long> newRange = Range.closed(lowestInNewPartition, range.upperEndpoint());
@@ -174,7 +176,7 @@ public class Partition extends AbstractDBActor {
     private void handleSplitPartition(SplitPartitionMsg msg) {
         ActorRef other = msg.getNewPartition();
         List<StoredRow> sorted = getSortedStoredRows();
-        List<StoredRow> rowsToCopy = new ArrayList<>(sorted.subList(CAPACITY / 2, CAPACITY));
+        List<StoredRow> rowsToCopy = new ArrayList<>(sorted.subList(capacity / 2, capacity));
         other.tell(new SplitInsertMsg(rowsToCopy), getSelf());
     }
 
@@ -189,7 +191,7 @@ public class Partition extends AbstractDBActor {
     private void handlePartialSplitSuccess(PartialSplitSuccessMsg msg) {
         // Only keep first half of rows because the rest were successfully moved to new partition
         List<StoredRow> sorted = getSortedStoredRows();
-        List<StoredRow> rowsToKeep = new ArrayList<>(sorted.subList(0, CAPACITY / 2));
+        List<StoredRow> rowsToKeep = new ArrayList<>(sorted.subList(0, capacity / 2));
         rows = rowsToKeep.stream().collect(Collectors.toMap(sr -> sr.getRow().getHashKey(), sr -> sr));
         isFull = false;
         table.tell(new SplitSuccessMsg(msg.getNewPartition(), msg.getNewRange(), getSelf(), range), getSelf());

@@ -5,9 +5,8 @@ import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
-import kamon.Kamon;
-import kamon.prometheus.PrometheusReporter;
-import kamon.zipkin.ZipkinReporter;
+import store.configuration.DatastoreConfig;
+import store.configuration.DatastoreModule;
 
 import java.util.UUID;
 
@@ -17,14 +16,14 @@ import java.util.UUID;
 public class QuorumManager extends AbstractDBActor {
 
     public static final String ACTOR_NAME = "quorum-manager";
-    private static final int READ_QUORUM = 1;
-    private static final int WRITE_QUORUM = 1;
 
     private final String id = UUID.randomUUID().toString();
+    private final DatastoreConfig config;
     private final ClusterMemberRegistry memberRegistry;
     private LamportId lamportId = new LamportId(id);
 
     private QuorumManager() {
+        config = DatastoreModule.inject(DatastoreConfig.class);
         memberRegistry = new ClusterMemberRegistry();
         getContext().actorOf(ClusterMemberListener.props(memberRegistry), ClusterMemberListener.ACTOR_NAME);
     }
@@ -41,14 +40,12 @@ public class QuorumManager extends AbstractDBActor {
                 .build();
     }
 
-
     private void handleQuorum(QueryMsg msg) {
         QueryMetaInfo meta = addNewLamportId(msg.getQueryMetaInfo());
         msg.updateMetaInfo(meta);
 
-        int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? WRITE_QUORUM : READ_QUORUM;
-        ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize),
-                QuorumResponseCollector.ACTOR_NAME + "-" + meta.getClientRequestId());
+        int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? config.getWriteQuorum() : config.getReadQuorum();
+        ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize));
 
         memberRegistry.getMasters()
                 .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));

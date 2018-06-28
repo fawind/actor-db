@@ -17,7 +17,6 @@ import org.junit.Before;
 import org.junit.Test;
 import store.Datastore;
 import store.configuration.DatastoreModule;
-import store.messages.query.SelectKeyMsg;
 
 import java.util.ArrayList;
 import java.util.Comparator;
