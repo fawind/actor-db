@@ -4,7 +4,6 @@ import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
 import api.model.Row;
 
-import java.lang.invoke.SerializedLambda;
 import java.util.function.Predicate;
 
 public class SelectWhereMsg extends QueryMsg {

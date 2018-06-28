@@ -7,16 +7,13 @@ import api.messages.QuerySuccessMsg;
 import client.DatastoreClient;
 import client.config.DatastoreClientModule;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import store.Datastore;
 import store.configuration.DatastoreModule;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;

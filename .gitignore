@@ -9,6 +9,9 @@ out
 # Log files
 *.log
 
+# Native files
+native
+
 # Idea files
 .idea
 *.iml

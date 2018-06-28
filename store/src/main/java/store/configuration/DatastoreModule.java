@@ -12,19 +12,25 @@ import store.Datastore;
 public class DatastoreModule extends AbstractModule {
 
     private static final String AKKA_REMOTE_CONFIG = "akka.conf";
+
+    private static Injector injector;
+
     private final EnvConfig envConfig;
 
     public DatastoreModule(EnvConfig envConfig) {
         this.envConfig = envConfig;
     }
 
-    public static Datastore createInstance() {
-        return DatastoreModule.createInstance(EnvConfig.withDefaults());
+    public static Datastore createInstance(EnvConfig envConfig) {
+        injector = Guice.createInjector(new DatastoreModule(envConfig));
+        return injector.getInstance(Datastore.class);
     }
 
-    public static Datastore createInstance(EnvConfig envConfig) {
-        Injector injector = Guice.createInjector(new DatastoreModule(envConfig));
-        return injector.getInstance(Datastore.class);
+    public static <T> T inject(Class<T> type) {
+        if (injector == null) {
+            throw new IllegalStateException("Injector not initialized");
+        }
+        return injector.getInstance(type);
     }
 
     @Override
