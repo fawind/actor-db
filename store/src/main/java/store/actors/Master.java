@@ -66,7 +66,7 @@ public class Master extends AbstractDBActor {
             return;
         }
 
-        String actorName = "table-" + tableName + "_" + (int) (Math.random() * 100);
+        String actorName = Table.ACTOR_NAME + "-" + tableName;
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
         log.debug("Created actor: " + actorName);

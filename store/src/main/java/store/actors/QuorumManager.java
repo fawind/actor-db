@@ -5,6 +5,9 @@ import akka.actor.Props;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
+import kamon.Kamon;
+import kamon.prometheus.PrometheusReporter;
+import kamon.zipkin.ZipkinReporter;
 
 import java.util.UUID;
 
@@ -44,7 +47,8 @@ public class QuorumManager extends AbstractDBActor {
         msg.updateMetaInfo(meta);
 
         int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? WRITE_QUORUM : READ_QUORUM;
-        ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize));
+        ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize),
+                QuorumResponseCollector.ACTOR_NAME + "-" + meta.getClientRequestId());
 
         memberRegistry.getMasters()
                 .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));
