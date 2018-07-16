@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class DatastoreClient implements AutoCloseable {
 
-    public static final String SYSTEM_NAME = "actors-db-client";
+    public static final String SYSTEM_NAME = "actor-db-client";
     public static final String CLUSTER_CLIENT_NAME = "cluster-client";
 
     private final DatastoreClientConfig config;

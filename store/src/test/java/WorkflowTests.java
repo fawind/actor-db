@@ -59,6 +59,7 @@ public class WorkflowTests {
         Thread.sleep(1000);
         client.close();
         datastore.close();
+        Thread.sleep(1000);
     }
 
     @Test

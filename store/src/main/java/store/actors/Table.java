@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Table extends AbstractDBActor {
+    public static final String ACTOR_NAME = "table";
     private final List<String> layout;
 
     // Map of Rows that could not be inserted to a partition because of ongoing splitting
@@ -130,18 +131,14 @@ public class Table extends AbstractDBActor {
     }
 
     private ActorRef startMultiPartitionQuery() {
-        return getContext().actorOf(TableResponseCollector.props(getSender(), createCurrentPartitionSet()));
-    }
-
-    private ActorRef startSinglePartitionQuery(ActorRef partition) {
-        Set<ActorRef> partitionSet = new HashSet<>();
-        partitionSet.add(partition);
-        return getContext().actorOf(TableResponseCollector.props(getSender(), partitionSet));
+        return getContext().actorOf(TableResponseCollector.props(getSender(), createCurrentPartitionSet()),
+                TableResponseCollector.ACTOR_NAME + "-" + (int)(Math.random() * 1000000));
     }
 
     private ActorRef createPartition(Range<Long> range) {
         log.debug("Created new leader partition with range: {}", range);
-        ActorRef partition = getContext().actorOf(Partition.props(range, getSelf()));
+        ActorRef partition = getContext().actorOf(Partition.props(range, getSelf()),
+                Partition.ACTOR_NAME + "-" + range.lowerEndpoint().toString());
 
         partitions.put(range, partition);
         return partition;

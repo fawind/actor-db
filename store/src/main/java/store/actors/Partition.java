@@ -34,10 +34,10 @@ import java.util.stream.Collectors;
 
 public class Partition extends AbstractDBActor {
 
-    private final int CAPACITY = 100;
+    public static final String ACTOR_NAME = "partition";
 
+    private final int CAPACITY = 10000;
     private final ActorRef table;
-
     private boolean isFull = false;
 
     private Range<Long> range;

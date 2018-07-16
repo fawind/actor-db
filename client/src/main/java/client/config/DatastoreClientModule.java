@@ -22,7 +22,7 @@ import static java.lang.String.format;
 public class DatastoreClientModule extends AbstractModule {
 
     private static final String AKKA_CLIENT_CONFIG = "akkaClient.conf";
-    private static final String DATASTORE_PATH_TEMPLATE = "akka.tcp://actors-db@%s:%d/system/receptionist";
+    private static final String DATASTORE_PATH_TEMPLATE = "akka.tcp://actor-db@%s:%d/system/receptionist";
 
     private final EnvConfig clientEnvConfig;
     private final EnvConfig storeEnvConfig;

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 
 public class QuorumResponseCollector extends AbstractDBActor {
 
+    public static final String ACTOR_NAME = "quorum-response-collector";
     private final ActorRef client;
     private final int quorumSize;
 

@@ -12,6 +12,7 @@ import java.util.Set;
 
 public class TableResponseCollector extends AbstractDBActor {
 
+    public static final String ACTOR_NAME = "table-response-collector";
     private final ActorRef quorumManager;
     private final Set<ActorRef> queriedPartitions;
 
