@@ -56,7 +56,7 @@ public class WorkflowTests {
 
     @After
     public void tearDown() throws Exception {
-        Thread.sleep(1000000);
+        Thread.sleep(1000);
         client.close();
         datastore.close();
         Thread.sleep(1000);

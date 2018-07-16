@@ -5,10 +5,8 @@ import akka.actor.ActorSystem;
 import akka.cluster.client.ClusterClientReceptionist;
 import kamon.Kamon;
 import kamon.prometheus.PrometheusReporter;
-import kamon.zipkin.ZipkinReporter;
 import store.actors.ClientEndpoint;
 import store.actors.Master;
-import store.actors.MetricsListener;
 import store.actors.QuorumManager;
 import store.configuration.DatastoreConfig;
 
