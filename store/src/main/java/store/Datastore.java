@@ -32,13 +32,11 @@ public class Datastore implements AutoCloseable {
 
     public void start() {
         Kamon.addReporter(new PrometheusReporter());
-        Kamon.addReporter(new ZipkinReporter());
 
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
         clientEndpoint = actorSystem.actorOf(ClientEndpoint.props(quorumManager), ClientEndpoint.ACTOR_NAME);
         actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
-//        metricsListener = actorSystem.actorOf(MetricsListener.props(), MetricsListener.ACTOR_NAME);
 
         ClusterClientReceptionist.get(actorSystem).registerService(clientEndpoint);
     }
