@@ -26,6 +26,8 @@ public class EnvConfig {
     private int writeQuorum = 1;
     @Builder.Default
     private int partitionCapacity = 100;
+    @Builder.Default
+    private boolean isBenchmarkTable = false;
 
     public static EnvConfig withDefaults() {
         return EnvConfig.builder().build();

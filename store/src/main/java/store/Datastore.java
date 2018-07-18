@@ -3,6 +3,8 @@ package store;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.client.ClusterClientReceptionist;
+import api.commands.CreateTableCommand;
+import com.google.common.collect.ImmutableList;
 import kamon.Kamon;
 import kamon.prometheus.PrometheusReporter;
 import store.actors.ClientEndpoint;
@@ -21,6 +23,7 @@ public class Datastore implements AutoCloseable {
     private ActorSystem actorSystem;
     private ActorRef quorumManager;
     private ActorRef clientEndpoint;
+    private ActorRef master;
     private ActorRef metricsListener;
 
     @Inject
@@ -34,9 +37,16 @@ public class Datastore implements AutoCloseable {
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
         clientEndpoint = actorSystem.actorOf(ClientEndpoint.props(quorumManager), ClientEndpoint.ACTOR_NAME);
-        actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
+        master = actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
 
         ClusterClientReceptionist.get(actorSystem).registerService(clientEndpoint);
+
+        if (config.getEnvConfig().isBenchmarkTable()) {
+            master.tell(CreateTableCommand.builder()
+                    .tableName("usertable")
+                    .schema(ImmutableList.of("string", "string"))
+                    .build(), ActorRef.noSender());
+        }
     }
 
     @Override
