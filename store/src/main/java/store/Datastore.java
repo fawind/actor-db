@@ -30,8 +30,6 @@ public class Datastore implements AutoCloseable {
     }
 
     public void start() {
-        Kamon.addReporter(new PrometheusReporter());
-
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
         clientEndpoint = actorSystem.actorOf(ClientEndpoint.props(quorumManager), ClientEndpoint.ACTOR_NAME);
