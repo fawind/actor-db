@@ -1,0 +1,17 @@
+#cloud-config
+users:
+  - name: store
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC/XGAKGK2D+Ra4tHOQfu8ZXBru1VKyBAllQSRVVEA+DmvjvQzmUbaGitibsa8eolSjXqJTdR1X9c81WvMbfY1SsLvkr+uFCMtrgqbceJaNPjIgn0W0q0rq+H0f4vYMpXB3HEhxr9wum6TzRIiNc/jyn9Y0Wg6oZRde+y5KEVgRfyJk/TMYZAKueZIOCHKDuhadsle8KZXMa8hipnurKjHk3h9jFhpF9khnrtGpGGYTjLEHdTowWIXHnqCsQXPyvSENOTFiivG18Pas8iMvjrv3L6RIkD7ft1Zec6deGQ1cObFNzb0FAo2cyyeZVuJ4IaWWT6jBvOYxBdvlTm3BYhmSkDSQ5W4XeL/sOwwiNPwk9/HyrkLvY7yjqZbSQI4vVRACZRWPKD3OH8wXHYNJsv5pd104wATnkEyWuR/gEHEoxPX0ujS3n/GFw4kQvadk5Tb1Vv9Q0hUUtMIsfPPXP6Ukste2Ltp6EUraJajIojk63d89Dwh/l7k+AezvFzeV+MnfRwu5RgyvJM28nD/Y+531yL3I6tYILiyht0YtzdIR05yGDXRvS7gVa5srBwSZIWen6omJukdhgVORx5tKVBOWz/q2RGDRmXywElij7RINLLr6WDl8t3R7Cy7FbuAFd4teDg0UARVsMB/+tTu/qm9wXTj7pwSQTIrokUWMIHhDuQ== mail@fabian.me
+
+packages:
+  - default-jdk
+  - htop
+
+runcmd:
+  - su - store -c 'git clone https://github.com/fawind/actor-db.git'
+  - su - store -c '/home/store/actor-db/gradlew :store:build -x test'
+  - su - store -c '/home/store/actor-db/deployment/ActorDbService.sh start /home/store/actor-db/store/build/libs/store-0.1.0-SNAPSHOT-all.jar -s 0.0.0.0 -r 1 -w 1 -c 100 -b'
