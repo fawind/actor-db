@@ -7,8 +7,7 @@ import time
 # thor03 = 172.16.64.57
 # thor04 = 172.16.64.58
 
-# STORE_IPS = ["172.16.64.55"]
-STORE_IPS = ["127.0.0.1"]
+STORE_IPS = ["172.16.64.55"]
 SSH_USERS = ["seminar1807"]
 
 NUM_STORES = len(STORE_IPS)
@@ -54,16 +53,15 @@ def main():
 
         store_ssh_sessions = []
         for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
-            # ssh = ("ssh", f"{user}@{ip}", "-t")
-            # ssh_cmd = (*ssh, '"', *remote_ssh_cmd, '"')
-            ssh_cmd = remote_ssh_cmd
+            ssh = ("ssh", f"{user}@{ip}", "-t")
+            ssh_cmd = (*ssh, '"', *remote_ssh_cmd, '"')
             print(f"STARTING DATASTORE ON {ip} WITH CMD: {' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)}")
             store_ssh = subprocess.Popen(ssh_cmd, shell=False)
             store_ssh_sessions.append(store_ssh)
 
             # Wait for seed server to start before other servers can connect
             if i == 0:
-                time.sleep(1)
+                time.sleep(10)
 
         # Wait for all non-seed servers to start
         if len(STORE_IPS) > 1:
