@@ -1,5 +1,6 @@
 import subprocess
 import time
+from itertools import chain
 
 # mut    = 172.16.64.14
 # thor01 = 172.16.64.55
@@ -49,12 +50,12 @@ def main():
     for config in CONFIGS:
         capacity = config[1]
         store_log_file = "store_capacity_{}-num_stores_{}.txt".format(capacity, NUM_STORES)
-        remote_ssh_cmd = (*STORE_CMD, *STORE_CMD_ARGS, *config, ">", store_log_file)
+        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config, [">"], [store_log_file]]))
 
         store_ssh_sessions = []
         for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
             ssh = ("ssh", "{}@{}".format(user, ip), "-t")
-            ssh_cmd = (*ssh, '"', *remote_ssh_cmd, '"')
+            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
             print("STARTING DATASTORE ON {} WITH CMD: {}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
             store_ssh = subprocess.Popen(ssh_cmd, shell=False)
             store_ssh_sessions.append(store_ssh)
@@ -71,12 +72,12 @@ def main():
 
         print("Running LOAD: capacity={}, #stores={}".format(capacity, NUM_STORES))
         load_file = "load_{}".format(bm_file_template)
-        load_cmd = (*BM_LOAD_CMD, *BM_PARAMS)
+        load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
         bm_run(load_cmd, load_file)
 
         print("Running READ: capacity={}, #stores={}".format(capacity, NUM_STORES))
         read_file = "read_{}".format(bm_file_template)
-        read_cmd = (*BM_READ_CMD, *BM_PARAMS)
+        read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
         bm_run(read_cmd, read_file)
 
         for store_ssh in store_ssh_sessions:
