@@ -23,7 +23,7 @@ STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", SEED_IP)
 
 BM_LOAD_CMD = ("sh", "load.sh")
 BM_READ_CMD = ("sh", "run.sh")
-BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={}".format(SEED_IP))
+BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={0}".format(SEED_IP))
 
 CONFIGS = [
     ("-c", "1"),
@@ -49,14 +49,14 @@ def bm_run(cmd, out_file_name):
 def main():
     for config in CONFIGS:
         capacity = config[1]
-        store_log_file = "store_capacity_{}-num_stores_{}.txt".format(capacity, NUM_STORES)
+        store_log_file = "store_capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
         remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config, [">"], [store_log_file]]))
 
         store_ssh_sessions = []
         for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
-            ssh = ("ssh", "{}@{}".format(user, ip), "-t")
+            ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
             ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
-            print("STARTING DATASTORE ON {} WITH CMD: {}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
+            print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
             store_ssh = subprocess.Popen(ssh_cmd, shell=False)
             store_ssh_sessions.append(store_ssh)
 
@@ -68,15 +68,15 @@ def main():
         if len(STORE_IPS) > 1:
             time.sleep(10)
 
-        bm_file_template = "capacity_{}-num_stores_{}.txt".format(capacity, NUM_STORES)
+        bm_file_template = "capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
 
-        print("Running LOAD: capacity={}, #stores={}".format(capacity, NUM_STORES))
-        load_file = "load_{}".format(bm_file_template)
+        print("Running LOAD: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
+        load_file = "load_{0}".format(bm_file_template)
         load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
         bm_run(load_cmd, load_file)
 
-        print("Running READ: capacity={}, #stores={}".format(capacity, NUM_STORES))
-        read_file = "read_{}".format(bm_file_template)
+        print("Running READ: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
+        read_file = "read_{0}".format(bm_file_template)
         read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
         bm_run(read_cmd, read_file)
 
