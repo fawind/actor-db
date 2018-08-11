@@ -27,16 +27,16 @@ BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={0}".format(SEED_IP))
 
 CONFIGS = [
     ("-c", "1"),
-    # ("-c", "10"),
-    # ("-c", "100"),
-    # ("-c", "1000"),
-    # ("-c", "10000"),
-    # ("-c", "50000"),
-    # ("-c", "100000"),
-    # ("-c", "250000"),
-    # ("-c", "500000"),
-    # ("-c", "1000000"),
-    # ("-c", "10000000")
+    ("-c", "10"),
+    ("-c", "100"),
+    ("-c", "1000"),
+    ("-c", "10000"),
+    ("-c", "50000"),
+    ("-c", "100000"),
+    ("-c", "250000"),
+    ("-c", "500000"),
+    ("-c", "1000000"),
+    ("-c", "10000000")
 ]
 
 
@@ -63,7 +63,7 @@ def main():
 
             # Wait for seed server to start before other servers can connect
             if i == 0:
-                time.sleep(30)
+                time.sleep(60)
 
         # Wait for all non-seed servers to start
         if len(STORE_IPS) > 1:
@@ -83,7 +83,6 @@ def main():
 
         for store_ssh in store_ssh_sessions:
             store_ssh.kill()
-
 
         # Wait for servers to be shut down completely
         time.sleep(30)
