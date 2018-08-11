@@ -34,6 +34,7 @@ public class ClientEndpoint extends AbstractDBActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(ClientRequest.class, this::handleRequest)
+                .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 

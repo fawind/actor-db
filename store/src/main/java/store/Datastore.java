@@ -4,6 +4,8 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.cluster.client.ClusterClientReceptionist;
 import api.commands.CreateTableCommand;
+import api.messages.ClientRequest;
+import api.messages.LamportId;
 import com.google.common.collect.ImmutableList;
 import kamon.Kamon;
 import kamon.prometheus.PrometheusReporter;
@@ -13,6 +15,7 @@ import store.actors.QuorumManager;
 import store.configuration.DatastoreConfig;
 
 import javax.inject.Inject;
+import java.util.UUID;
 
 public class Datastore implements AutoCloseable {
 
@@ -38,11 +41,14 @@ public class Datastore implements AutoCloseable {
         ClusterClientReceptionist.get(actorSystem).registerService(clientEndpoint);
 
         if (config.getEnvConfig().isBenchmarkTable()) {
+            System.out.println("Creating table @ Datastore");
             CreateTableCommand benchmarkTableCmd = CreateTableCommand.builder()
                     .tableName("usertable")
                     .schema(ImmutableList.of("string", "string"))
                     .build();
-            clientEndpoint.tell(benchmarkTableCmd, ActorRef.noSender());
+
+            ClientRequest benchmarkTableRequest = new ClientRequest(benchmarkTableCmd, UUID.randomUUID().toString(), new LamportId("Datastore"));
+            clientEndpoint.tell(benchmarkTableRequest, ActorRef.noSender());
         }
     }
 

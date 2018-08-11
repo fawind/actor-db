@@ -18,6 +18,7 @@ public class DatastoreMain {
                 .addObject(arguments)
                 .build()
                 .parse(args);
+
         EnvConfig storeEnvConfig = EnvConfig.builder()
                 .hostname(arguments.getStoreHost())
                 .port(arguments.getStorePort())
