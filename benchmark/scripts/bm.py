@@ -57,8 +57,8 @@ def main():
             ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
             ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
             print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
-            # store_ssh = subprocess.Popen(ssh_cmd, shell=False)
-            # store_ssh_sessions.append(store_ssh)
+            store_ssh = subprocess.Popen(ssh_cmd, shell=False)
+            store_ssh_sessions.append(store_ssh)
 
             # Wait for seed server to start before other servers can connect
             if i == 0:
@@ -80,8 +80,8 @@ def main():
         read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
         # bm_run(read_cmd, read_file)
 
-        # for store_ssh in store_ssh_sessions:
-        #     store_ssh.kill()
+        for store_ssh in store_ssh_sessions:
+            store_ssh.kill()
 
 
 if __name__ == "__main__":
