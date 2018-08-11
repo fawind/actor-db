@@ -14,4 +14,4 @@ packages:
 runcmd:
   - su - store -c 'git clone https://github.com/fawind/actor-db.git'
   - su - store -c '/home/store/actor-db/gradlew -p /home/store/actor-db :store:build -x test'
-  - su - store -c '/home/store/actor-db/deployment/ActorDbService.sh start /home/store/actor-db/store/build/libs/store-0.1.0-SNAPSHOT-all.jar "-r 1 -w 1 -c 100 -b"'
+  - su - store -c '/home/store/actor-db/deployment/digitalocean/startService.sh "{{store-args}}"'
