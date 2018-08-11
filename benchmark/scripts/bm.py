@@ -58,7 +58,6 @@ def main():
             ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
             ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ["-h", ip, "&>", store_log_file, '"']]))
             print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
-            print(ssh_cmd)
             store_ssh = subprocess.Popen(ssh_cmd, shell=False)
             store_ssh_sessions.append(store_ssh)
 
@@ -75,12 +74,12 @@ def main():
         print("Running LOAD: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
         load_file = "load_{0}".format(bm_file_template)
         load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
-        # bm_run(load_cmd, load_file)
+        bm_run(load_cmd, load_file)
 
         print("Running READ: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
         read_file = "read_{0}".format(bm_file_template)
         read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
-        # bm_run(read_cmd, read_file)
+        bm_run(read_cmd, read_file)
 
         for store_ssh in store_ssh_sessions:
             store_ssh.kill()
