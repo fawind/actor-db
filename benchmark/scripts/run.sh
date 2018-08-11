@@ -1,7 +1,12 @@
-gradle -p /Users/law/repos/actor-db :benchmark:shadowJar
+CUR_DIR=`pwd`
+
+cd ../..
+./gradlew :benchmark:shadowJar
+
+cd $CUR_DIR
 
 java \
-  -cp ./lib/*:/Users/law/repos/actor-db/benchmark/build/libs/benchmark-0.1.0-SNAPSHOT-all.jar \
+  -cp ./lib/*:../build/libs/benchmark-0.1.0-SNAPSHOT-all.jar \
   com.yahoo.ycsb.Client -s -t \
   -threads 8 \
   -db ActorDbClient \

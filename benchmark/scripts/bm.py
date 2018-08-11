@@ -27,16 +27,16 @@ BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={0}".format(SEED_IP))
 
 CONFIGS = [
     ("-c", "1"),
-    ("-c", "10"),
-    ("-c", "100"),
-    ("-c", "1000"),
-    ("-c", "10000"),
-    ("-c", "50000"),
-    ("-c", "100000"),
-    ("-c", "250000"),
-    ("-c", "500000"),
-    ("-c", "1000000"),
-    ("-c", "10000000")
+    # ("-c", "10"),
+    # ("-c", "100"),
+    # ("-c", "1000"),
+    # ("-c", "10000"),
+    # ("-c", "50000"),
+    # ("-c", "100000"),
+    # ("-c", "250000"),
+    # ("-c", "500000"),
+    # ("-c", "1000000"),
+    # ("-c", "10000000")
 ]
 
 
@@ -57,8 +57,8 @@ def main():
             ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
             ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
             print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
-            store_ssh = subprocess.Popen(ssh_cmd, shell=False)
-            store_ssh_sessions.append(store_ssh)
+            # store_ssh = subprocess.Popen(ssh_cmd, shell=False)
+            # store_ssh_sessions.append(store_ssh)
 
             # Wait for seed server to start before other servers can connect
             if i == 0:
@@ -73,15 +73,15 @@ def main():
         print("Running LOAD: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
         load_file = "load_{0}".format(bm_file_template)
         load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
-        bm_run(load_cmd, load_file)
+        # bm_run(load_cmd, load_file)
 
         print("Running READ: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
         read_file = "read_{0}".format(bm_file_template)
         read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
-        bm_run(read_cmd, read_file)
+        # bm_run(read_cmd, read_file)
 
-        for store_ssh in store_ssh_sessions:
-            store_ssh.kill()
+        # for store_ssh in store_ssh_sessions:
+        #     store_ssh.kill()
 
 
 if __name__ == "__main__":
