@@ -67,6 +67,7 @@ public class ClientEndpoint extends AbstractDBActor {
     }
 
     private void createTable(CreateTableCommand command, String clientRequestId, LamportId lamportId) {
+        log.info("Creating table");
         QueryMetaInfo queryMetaInfo = QueryMetaInfo.newWriteMeta(getSender(), clientRequestId, lamportId);
         CreateTableMsg msg = new CreateTableMsg(command.getTableName(), command.getSchema(), queryMetaInfo);
         quorumManager.tell(msg, getSelf());
