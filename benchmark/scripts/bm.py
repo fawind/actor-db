@@ -19,7 +19,7 @@ assert(NUM_STORES > 0)
 SEED_IP = STORE_IPS[0]
 
 STORE_CMD = ("java", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
-STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", SEED_IP)
+STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", "{0}:2552".format(SEED_IP))
 
 BM_LOAD_CMD = ("sh", "load.sh")
 BM_READ_CMD = ("sh", "run.sh")
@@ -50,13 +50,15 @@ def main():
     for config in CONFIGS:
         capacity = config[1]
         store_log_file = "store_capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
-        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config, [">"], [store_log_file]]))
+        host_ip = ["-h", ]
+        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config]))
 
         store_ssh_sessions = []
         for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
             ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
-            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
+            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ["-h", ip, "&>", store_log_file, '"']]))
             print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
+            print(ssh)
             store_ssh = subprocess.Popen(ssh_cmd, shell=False)
             store_ssh_sessions.append(store_ssh)
 
