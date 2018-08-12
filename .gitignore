@@ -19,3 +19,8 @@ bin
 # Idea files
 .idea
 *.iml
+
+# Eval
+*.svg
+venv/
+.ipynb_checkpoints/
