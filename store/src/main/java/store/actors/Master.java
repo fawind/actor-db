@@ -69,7 +69,7 @@ public class Master extends AbstractDBActor {
         String actorName = Table.ACTOR_NAME + "-" + tableName;
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
 
-        log.debug("Created actor: " + actorName);
+        log.info("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
         getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());

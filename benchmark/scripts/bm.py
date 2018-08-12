@@ -18,17 +18,14 @@ assert(NUM_STORES > 0)
 
 SEED_IP = STORE_IPS[0]
 
-STORE_CMD = ("java", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
-STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", SEED_IP)
+STORE_CMD = ("java", "-Xms2G", "-Xmx22G", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
+STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", "{0}:2552".format(SEED_IP))
 
 BM_LOAD_CMD = ("sh", "load.sh")
 BM_READ_CMD = ("sh", "run.sh")
-BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={0}".format(SEED_IP))
+BM_PARAMS = ("-P", "2M.dat", "-p", "storeIp={0}".format(SEED_IP))
 
 CONFIGS = [
-    ("-c", "1"),
-    ("-c", "10"),
-    ("-c", "100"),
     ("-c", "1000"),
     ("-c", "10000"),
     ("-c", "50000"),
@@ -50,19 +47,20 @@ def main():
     for config in CONFIGS:
         capacity = config[1]
         store_log_file = "store_capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
-        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config, [">"], [store_log_file]]))
+        host_ip = ["-h", ]
+        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config]))
 
         store_ssh_sessions = []
         for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
             ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
-            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ['"']]))
+            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ["-h", ip, "&>", store_log_file, '"']]))
             print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
-            store_ssh = subprocess.Popen(ssh_cmd, shell=False)
+            store_ssh = subprocess.Popen(" ".join(ssh_cmd), shell=True)
             store_ssh_sessions.append(store_ssh)
 
             # Wait for seed server to start before other servers can connect
             if i == 0:
-                time.sleep(10)
+                time.sleep(60)
 
         # Wait for all non-seed servers to start
         if len(STORE_IPS) > 1:
@@ -82,6 +80,9 @@ def main():
 
         for store_ssh in store_ssh_sessions:
             store_ssh.kill()
+
+        # Wait for servers to be shut down completely
+        time.sleep(30)
 
 
 if __name__ == "__main__":
