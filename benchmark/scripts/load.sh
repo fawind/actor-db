@@ -8,7 +8,7 @@ cd $CUR_DIR
 java \
   -cp ./lib/*:../build/libs/benchmark-0.1.0-SNAPSHOT-all.jar \
   com.yahoo.ycsb.Client -s -load \
-  -threads 8 \
+  -threads 16 \
   -db ActorDbClient \
   -P ./workloads/workloadc \
   -p clientPort=0 \

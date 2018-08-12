@@ -18,7 +18,7 @@ assert(NUM_STORES > 0)
 
 SEED_IP = STORE_IPS[0]
 
-STORE_CMD = ("java", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
+STORE_CMD = ("java", "-Xms=2G", "-Xmx=22G", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
 STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", "{0}:2552".format(SEED_IP))
 
 BM_LOAD_CMD = ("sh", "load.sh")
@@ -26,8 +26,6 @@ BM_READ_CMD = ("sh", "run.sh")
 BM_PARAMS = ("-P", "10M.dat", "-p", "storeIp={0}".format(SEED_IP))
 
 CONFIGS = [
-    ("-c", "1"),
-    ("-c", "10"),
     ("-c", "100"),
     ("-c", "1000"),
     ("-c", "10000"),
