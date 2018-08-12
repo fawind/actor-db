@@ -18,7 +18,7 @@ assert(NUM_STORES > 0)
 
 SEED_IP = STORE_IPS[0]
 
-STORE_CMD = ("java", "-Xms=2G", "-Xmx=22G", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
+STORE_CMD = ("java", "-Xms2G", "-Xmx22G", "-jar", "store-0.1.0-SNAPSHOT-all.jar")
 STORE_CMD_ARGS = ("-b", "-w", "1", "-r", "1", "-s", "{0}:2552".format(SEED_IP))
 
 BM_LOAD_CMD = ("sh", "load.sh")
