@@ -44,45 +44,46 @@ def bm_run(cmd, out_file_name):
 
 
 def main():
-    for config in CONFIGS:
-        capacity = config[1]
-        store_log_file = "store_capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
-        host_ip = ["-h", ]
-        remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config]))
+    for run_num in range(3, 13):
+        print("STARTING RUN " + run_num)
+        for config in CONFIGS:
+            capacity = config[1]
+            store_log_file = "run_{0}-store_capacity_{1}-num_stores_{2}.txt".format(run_run, capacity, NUM_STORES)
+            remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config]))
 
-        store_ssh_sessions = []
-        for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
-            ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
-            ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ["-h", ip, "&>", store_log_file, '"']]))
-            print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
-            store_ssh = subprocess.Popen(" ".join(ssh_cmd), shell=True)
-            store_ssh_sessions.append(store_ssh)
+            store_ssh_sessions = []
+            for i, (user, ip) in enumerate(zip(SSH_USERS, STORE_IPS)):
+                ssh = ("ssh", "{0}@{1}".format(user, ip), "-t")
+                ssh_cmd = list(chain.from_iterable([ssh, ['"'], remote_ssh_cmd, ["-h", ip, "&>", store_log_file, '"']]))
+                print("STARTING DATASTORE ON {0} WITH CMD: {1}".format(ip, ' '.join(STORE_CMD_ARGS) + ' ' + ' '.join(config)))
+                store_ssh = subprocess.Popen(" ".join(ssh_cmd), shell=True)
+                store_ssh_sessions.append(store_ssh)
 
-            # Wait for seed server to start before other servers can connect
-            if i == 0:
-                time.sleep(60)
+                # Wait for seed server to start before other servers can connect
+                if i == 0:
+                    time.sleep(60)
 
-        # Wait for all non-seed servers to start
-        if len(STORE_IPS) > 1:
-            time.sleep(10)
+            # Wait for all non-seed servers to start
+            if len(STORE_IPS) > 1:
+                time.sleep(10)
 
-        bm_file_template = "capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
+            bm_file_template = "capacity_{0}-num_stores_{1}.txt".format(capacity, NUM_STORES)
 
-        print("Running LOAD: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
-        load_file = "load_{0}".format(bm_file_template)
-        load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
-        bm_run(load_cmd, load_file)
+            print("Running LOAD: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
+            load_file = "run_{0}-load_{1}".format(run_num, bm_file_template)
+            load_cmd = list(chain.from_iterable([BM_LOAD_CMD, BM_PARAMS]))
+            bm_run(load_cmd, load_file)
 
-        print("Running READ: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
-        read_file = "read_{0}".format(bm_file_template)
-        read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
-        bm_run(read_cmd, read_file)
+            print("Running READ: capacity={0}, #stores={1}".format(capacity, NUM_STORES))
+            read_file = "run_{0}-read_{1}".format(run_num, bm_file_template)
+            read_cmd = list(chain.from_iterable([BM_READ_CMD, BM_PARAMS]))
+            bm_run(read_cmd, read_file)
 
-        for store_ssh in store_ssh_sessions:
-            store_ssh.kill()
+            for store_ssh in store_ssh_sessions:
+                store_ssh.kill()
 
-        # Wait for servers to be shut down completely
-        time.sleep(30)
+            # Wait for servers to be shut down completely
+            time.sleep(30)
 
 
 if __name__ == "__main__":
