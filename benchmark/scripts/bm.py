@@ -45,7 +45,7 @@ def bm_run(cmd, out_file_name):
 
 def main():
     for run_num in range(3, 13):
-        print("STARTING RUN " + run_num)
+        print("STARTING RUN " + str(run_num))
         for config in CONFIGS:
             capacity = config[1]
             store_log_file = "run_{0}-store_capacity_{1}-num_stores_{2}.txt".format(run_run, capacity, NUM_STORES)
