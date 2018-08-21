@@ -48,7 +48,7 @@ def main():
         print("STARTING RUN " + str(run_num))
         for config in CONFIGS:
             capacity = config[1]
-            store_log_file = "run_{0}-store_capacity_{1}-num_stores_{2}.txt".format(run_run, capacity, NUM_STORES)
+            store_log_file = "run_{0}-store_capacity_{1}-num_stores_{2}.txt".format(run_num, capacity, NUM_STORES)
             remote_ssh_cmd = list(chain.from_iterable([STORE_CMD, STORE_CMD_ARGS, config]))
 
             store_ssh_sessions = []
