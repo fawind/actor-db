@@ -50,7 +50,7 @@ public class ClientActor extends AbstractClientActor {
     private void handleCommand(CompletableCommand command) {
         ClientRequest clientRequest = clientRequestFactory.buildRequest(command.getCommand());
         requests.put(clientRequest.getClientRequestId(), command.getResponse());
-        clusterClient.tell(new ClusterClient.Send(config.getClientEndpointPath(), clientRequest, true), getSelf());
+        clusterClient.tell(new ClusterClient.Send(config.getClientEndpointPath(), clientRequest, false), getSelf());
     }
 
 
