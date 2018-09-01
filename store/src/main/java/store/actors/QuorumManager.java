@@ -44,10 +44,10 @@ public class QuorumManager extends AbstractDBActor {
         QueryMetaInfo meta = addNewLamportId(msg.getQueryMetaInfo());
         msg.updateMetaInfo(meta);
 
-        int quorumSize = msg.getQueryMetaInfo().isWriteQuery() ? config.getEnvConfig().getWriteQuorum() : config.getEnvConfig().getReadQuorum();
+        int quorumSize = getQuorumSize(msg.getQueryMetaInfo().isWriteQuery());
         ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize));
 
-        memberRegistry.getMasters()
+        memberRegistry.getRandomMasters(quorumSize + config.getEnvConfig().getExtendedQuorum())
                 .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));
     }
 
@@ -58,5 +58,12 @@ public class QuorumManager extends AbstractDBActor {
     private LamportId updatedLamportId(LamportId other) {
         lamportId = lamportId.maxIdCopy(other);
         return lamportId;
+    }
+
+    private int getQuorumSize(boolean isWriteQuery) {
+        if (isWriteQuery) {
+            return config.getEnvConfig().getWriteQuorum();
+        }
+        return config.getEnvConfig().getReadQuorum();
     }
 }

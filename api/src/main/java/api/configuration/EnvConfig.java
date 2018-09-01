@@ -25,6 +25,8 @@ public class EnvConfig {
     @Builder.Default
     private int writeQuorum = 1;
     @Builder.Default
+    private int extendedQuorum = 0;
+    @Builder.Default
     private int partitionCapacity = 100;
     @Builder.Default
     private boolean isBenchmarkTable = false;

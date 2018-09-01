@@ -25,6 +25,7 @@ public class DatastoreMain {
                 .seedNodes(arguments.getSeedNodes())
                 .readQuorum(arguments.getReadQuorum())
                 .writeQuorum(arguments.getWriteQuorum())
+                .extendedQuorum(arguments.getExtendedQuorum())
                 .partitionCapacity(arguments.getPartitionCapacity())
                 .isBenchmarkTable(arguments.isBenchmark())
                 .build();
@@ -49,6 +50,8 @@ public class DatastoreMain {
         private int readQuorum = 1;
         @Parameter(names = {"--writeQuorum", "-w"}, description = "Write quorum count")
         private int writeQuorum = 1;
+        @Parameter(names = {"--extendedQuorum", "-e"}, description = "Extended quorum count")
+        private int extendedQuorum = 0;
         @Parameter(names = {"--partitionCapacity", "-c"}, description = "Max partition capacity")
         private int partitionCapacity = 100;
         @Parameter(names = {"--benchmark", "-b"}, description = "Create benchmark table")

@@ -5,7 +5,9 @@ import akka.actor.ActorPaths;
 import akka.cluster.Member;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -33,6 +35,12 @@ public class ClusterMemberRegistry {
         return members.stream()
                 .map(this::getMasterActorPath)
                 .collect(toImmutableSet());
+    }
+
+    public ImmutableSet<ActorPath> getRandomMasters(int count) {
+        List<ActorPath> masters = getMasters().asList();
+        Collections.shuffle(masters);
+        return ImmutableSet.copyOf(masters.subList(0, count));
     }
 
     private ActorPath getMasterActorPath(Member member) {
