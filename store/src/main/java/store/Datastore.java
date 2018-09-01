@@ -9,6 +9,8 @@ import api.messages.LamportId;
 import com.google.common.collect.ImmutableList;
 import kamon.Kamon;
 import kamon.prometheus.PrometheusReporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import store.actors.ClientEndpoint;
 import store.actors.Master;
 import store.actors.QuorumManager;
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class Datastore implements AutoCloseable {
 
     public static final String SYSTEM_NAME = "actor-db";
+    private static final Logger log = LoggerFactory.getLogger(Datastore.class);
 
     private final DatastoreConfig config;
 
@@ -33,6 +36,7 @@ public class Datastore implements AutoCloseable {
     }
 
     public void start() {
+        log.info("Starting datastore with config: {}", config.getEnvConfig());
         actorSystem = ActorSystem.create(SYSTEM_NAME, config.getAkkaConfig());
         quorumManager = actorSystem.actorOf(QuorumManager.props(), QuorumManager.ACTOR_NAME);
         clientEndpoint = actorSystem.actorOf(ClientEndpoint.props(quorumManager), ClientEndpoint.ACTOR_NAME);
@@ -41,15 +45,15 @@ public class Datastore implements AutoCloseable {
         ClusterClientReceptionist.get(actorSystem).registerService(clientEndpoint);
 
         if (config.getEnvConfig().isBenchmarkTable()) {
+            log.info("Create benchmark table: {}", config.getEnvConfig().getBenchmarkTableName());
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
-            System.out.println("Creating table @ Datastore");
             CreateTableCommand benchmarkTableCmd = CreateTableCommand.builder()
-                    .tableName("usertable")
+                    .tableName(config.getEnvConfig().getBenchmarkTableName())
                     .schema(ImmutableList.of("string", "string"))
                     .build();
 

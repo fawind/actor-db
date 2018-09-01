@@ -53,7 +53,7 @@ public class DatastoreMain {
         @Parameter(names = {"--extendedQuorum", "-e"}, description = "Extended quorum count")
         private int extendedQuorum = 0;
         @Parameter(names = {"--partitionCapacity", "-c"}, description = "Max partition capacity")
-        private int partitionCapacity = 100;
+        private int partitionCapacity = 50000;
         @Parameter(names = {"--benchmark", "-b"}, description = "Create benchmark table")
         private boolean isBenchmark  = false;
     }

@@ -27,9 +27,11 @@ public class EnvConfig {
     @Builder.Default
     private int extendedQuorum = 0;
     @Builder.Default
-    private int partitionCapacity = 100;
+    private int partitionCapacity = 5000;
     @Builder.Default
     private boolean isBenchmarkTable = false;
+    @Builder.Default
+    private String benchmarkTableName = "usertable";
 
     public static EnvConfig withDefaults() {
         return EnvConfig.builder().build();
