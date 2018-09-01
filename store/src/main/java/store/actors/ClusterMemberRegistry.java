@@ -5,6 +5,7 @@ import akka.actor.ActorPaths;
 import akka.cluster.Member;
 import com.google.common.collect.ImmutableSet;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -38,7 +39,7 @@ public class ClusterMemberRegistry {
     }
 
     public ImmutableSet<ActorPath> getRandomMasters(int count) {
-        List<ActorPath> masters = getMasters().asList();
+        List<ActorPath> masters = new ArrayList<>(getMasters());
         Collections.shuffle(masters);
         return ImmutableSet.copyOf(masters.subList(0, count));
     }
