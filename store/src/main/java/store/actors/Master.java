@@ -61,8 +61,9 @@ public class Master extends AbstractDBActor {
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
-                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
+            getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
+//            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
+//                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
             return;
         }
 
