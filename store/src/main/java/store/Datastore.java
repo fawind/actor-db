@@ -17,6 +17,7 @@ import store.actors.QuorumManager;
 import store.configuration.DatastoreConfig;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class Datastore implements AutoCloseable {
@@ -54,7 +55,7 @@ public class Datastore implements AutoCloseable {
 
             CreateTableCommand benchmarkTableCmd = CreateTableCommand.builder()
                     .tableName(config.getEnvConfig().getBenchmarkTableName())
-                    .schema(ImmutableList.of("string", "string"))
+                    .schema(new ArrayList<>(ImmutableList.of("string", "string")))
                     .build();
 
             ClientRequest benchmarkTableRequest = new ClientRequest(benchmarkTableCmd, UUID.randomUUID().toString(), new LamportId("Datastore"));
