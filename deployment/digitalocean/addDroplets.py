@@ -24,7 +24,7 @@ def get_header(token):
 
 
 def get_body(names, store_args):
-    return {'names': names, 'region': 'nyc1', 'size': 's-1vcpu-1gb',
+    return {'names': names, 'region': 'nyc1', 'size': 's-4vcpu-8gb',
             'ssh_keys': [21000986], 'image': 'ubuntu-16-04-x64',
             'backups': False, 'ipv6': False, 'private_networking': True,
             'tags': ['store-node'], 'user_data': get_user_config(store_args)}

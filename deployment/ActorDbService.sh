@@ -14,7 +14,7 @@ case $1 in
   start)
       echo "Starting $SERVICE_NAME ..."
       if [ ! -f $PID_PATH_NAME ]; then
-          nohup java -jar $PATH_TO_JAR $JAR_ARGS >> $LOG_FILE 2>&1&
+          nohup java -Xmx7g -Xms2g -jar $PATH_TO_JAR $JAR_ARGS >> $LOG_FILE 2>&1&
           echo $! > $PID_PATH_NAME
           echo "$SERVICE_NAME started ..."
       else
