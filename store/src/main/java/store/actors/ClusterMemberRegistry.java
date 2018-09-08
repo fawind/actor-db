@@ -46,9 +46,10 @@ public class ClusterMemberRegistry {
     }
 
     public ImmutableSet<ActorPath> getRandomMasters(int count) {
+        int nodeCount = Math.min(count, members.size());
         List<ActorPath> masters = new ArrayList<>(getMasters());
         Collections.shuffle(masters);
-        return ImmutableSet.copyOf(masters.subList(0, count));
+        return ImmutableSet.copyOf(masters.subList(0, nodeCount));
     }
 
     private ActorPath getMasterActorPath(Member member) {
