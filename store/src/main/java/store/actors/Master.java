@@ -60,12 +60,11 @@ public class Master extends AbstractDBActor {
 
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
-        // TODO(windheuser): Hack for benchmark table
-//        if (tables.containsKey(tableName)) {
-//            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
-//                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
-//            return;
-//        }
+        if (tables.containsKey(tableName)) {
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
+                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
+            return;
+        }
 
         String actorName = Table.ACTOR_NAME + "-" + tableName;
         ActorRef table = getContext().actorOf(Table.props(msg.getLayout()), actorName);
@@ -73,6 +72,7 @@ public class Master extends AbstractDBActor {
         log.info("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
+        if (tableName.equals("usertable")) return;
         getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
     }
 
