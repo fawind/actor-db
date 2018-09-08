@@ -6,8 +6,10 @@ import api.model.Row;
 import java.io.Serializable;
 
 public class StoredRow implements Serializable {
-    private final Row row;
-    private final LamportId lamportId;
+    private Row row;
+    private LamportId lamportId;
+
+    private StoredRow() {}
 
     public StoredRow(Row row, LamportId lamportId) {
         this.row = row;
@@ -21,6 +23,4 @@ public class StoredRow implements Serializable {
     public LamportId getLamportId() {
         return lamportId;
     }
-
-
 }
