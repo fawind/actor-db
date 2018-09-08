@@ -12,6 +12,8 @@ public class CreateTableCommand implements Command {
     private String tableName;
     private List<String> schema;
 
+    private CreateTableCommand() {}
+
     @Override
     public CommandType getCommandType() {
         return CommandType.CREATE_TABLE;

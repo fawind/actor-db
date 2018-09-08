@@ -9,8 +9,10 @@ import java.util.List;
 @Builder
 public class InsertIntoCommand implements Command {
 
-    private final String tableName;
-    private final List<String> values;
+    private String tableName;
+    private List<String> values;
+
+    private InsertIntoCommand() {}
 
     @Override
     public CommandType getCommandType() {

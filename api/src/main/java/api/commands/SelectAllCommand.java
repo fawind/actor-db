@@ -7,7 +7,9 @@ import lombok.Data;
 @Builder
 public class SelectAllCommand implements Command {
 
-    private final String tableName;
+    private String tableName;
+
+    private SelectAllCommand() {}
 
     @Override
     public CommandType getCommandType() {
