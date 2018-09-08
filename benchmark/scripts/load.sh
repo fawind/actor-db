@@ -9,7 +9,7 @@ cd $CUR_DIR
 java \
   -cp ./lib/*:../build/libs/benchmark-0.1.0-SNAPSHOT-all.jar \
   com.yahoo.ycsb.Client -s -load \
-  -threads 16 \
+  -threads 100 \
   -db ActorDbClient \
   -P ./workloads/workloadc \
   -P ./300k.dat \
