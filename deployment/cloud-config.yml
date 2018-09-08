@@ -12,6 +12,6 @@ packages:
   - htop
 
 runcmd:
-  - su - store -c 'git clone https://github.com/fawind/actor-db.git'
+  - su - store -c 'git clone -b docean https://github.com/fawind/actor-db.git'
   - su - store -c '/home/store/actor-db/gradlew -p /home/store/actor-db :store:build -x test'
   - su - store -c '/home/store/actor-db/deployment/digitalocean/startService.sh "{{store-args}}"'
