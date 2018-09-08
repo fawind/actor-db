@@ -22,5 +22,7 @@ bin
 
 # Eval
 *.svg
+*.pgf
 venv/
 .ipynb_checkpoints/
+run_*/
