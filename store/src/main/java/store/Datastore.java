@@ -44,23 +44,6 @@ public class Datastore implements AutoCloseable {
         actorSystem.actorOf(Master.props(), Master.ACTOR_NAME);
 
         ClusterClientReceptionist.get(actorSystem).registerService(clientEndpoint);
-
-        if (config.getEnvConfig().isBenchmarkTable()) {
-            log.info("Create benchmark table: {}", config.getEnvConfig().getBenchmarkTableName());
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            CreateTableCommand benchmarkTableCmd = CreateTableCommand.builder()
-                    .tableName(config.getEnvConfig().getBenchmarkTableName())
-                    .schema(new ArrayList<>(ImmutableList.of("string", "string")))
-                    .build();
-
-            ClientRequest benchmarkTableRequest = new ClientRequest(benchmarkTableCmd, UUID.randomUUID().toString(), new LamportId("Datastore"));
-            clientEndpoint.tell(benchmarkTableRequest, ActorRef.noSender());
-        }
     }
 
     @Override

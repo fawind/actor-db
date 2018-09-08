@@ -8,6 +8,7 @@ import api.messages.QueryErrorMsg;
 import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
 import api.messages.QuerySuccessMsg;
+import com.google.common.collect.ImmutableList;
 import store.messages.query.CreateTableMsg;
 import store.messages.query.DeleteKeyMsg;
 import store.messages.query.DropTableMsg;
@@ -17,7 +18,9 @@ import store.messages.query.SelectAllMsg;
 import store.messages.query.SelectKeyMsg;
 import store.messages.query.SelectWhereMsg;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +35,7 @@ public class Master extends AbstractDBActor {
 
     private Master() {
         tables = new HashMap<>();
+        createBenchmarkTable();
     }
 
     public static Props props() {
@@ -61,9 +65,8 @@ public class Master extends AbstractDBActor {
     private void handleCreateTable(CreateTableMsg msg) {
         String tableName = msg.getTableName();
         if (tables.containsKey(tableName)) {
-            getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
-//            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
-//                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
+            getSender().tell(new QueryErrorMsg("Table '" + tableName + "' already exists.",
+                    addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
             return;
         }
 
@@ -74,6 +77,15 @@ public class Master extends AbstractDBActor {
 
         tables.put(msg.getTableName(), table);
         getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
+    }
+
+    private void createBenchmarkTable() {
+        String tableName = "usertable";
+        List<String> layout = new ArrayList<>(ImmutableList.of("string", "string"));
+        String actorName = Table.ACTOR_NAME + "-" + tableName;
+        ActorRef table = getContext().actorOf(Table.props(layout), actorName);
+        log.info("Created actor: " + actorName);
+        tables.put(tableName, table);
     }
 
     private void handleDropTable(DropTableMsg msg) {
