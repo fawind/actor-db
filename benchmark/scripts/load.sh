@@ -12,7 +12,7 @@ java \
   -threads 16 \
   -db ActorDbClient \
   -P ./workloads/workloadc \
-  -P ./1M.dat \
+  -P ./500k.dat \
   -p clientPort=0 \
   -p storeIp="206.189.238.25" \
   -p storePort=2552 \
