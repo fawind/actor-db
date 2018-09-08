@@ -72,7 +72,6 @@ public class Master extends AbstractDBActor {
         log.info("Created actor: " + actorName);
 
         tables.put(msg.getTableName(), table);
-        if (tableName.equals("usertable")) return;
         getSender().tell(new QuerySuccessMsg(addResponseLamportIdToMeta(msg.getQueryMetaInfo())), getSelf());
     }
 

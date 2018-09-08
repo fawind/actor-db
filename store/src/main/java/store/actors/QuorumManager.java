@@ -2,11 +2,13 @@ package store.actors;
 
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import api.commands.CreateTableCommand;
 import api.messages.LamportId;
 import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
 import store.configuration.DatastoreConfig;
 import store.configuration.DatastoreModule;
+import store.messages.query.CreateTableMsg;
 
 import java.util.UUID;
 
@@ -47,8 +49,13 @@ public class QuorumManager extends AbstractDBActor {
         int quorumSize = getQuorumSize(msg.getQueryMetaInfo().isWriteQuery());
         ActorRef quorumCollector = getContext().actorOf(QuorumResponseCollector.props(msg.getRequester(), quorumSize));
 
-        memberRegistry.getRandomMasters(quorumSize + config.getEnvConfig().getExtendedQuorum())
-                .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));
+        if (msg instanceof CreateTableMsg) {
+            memberRegistry.getMasters()
+                    .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));
+        } else {
+            memberRegistry.getRandomMasters(quorumSize + config.getEnvConfig().getExtendedQuorum())
+                    .forEach(actorPath -> getContext().actorSelection(actorPath).tell(msg, quorumCollector));
+        }
     }
 
     private QueryMetaInfo addNewLamportId(QueryMetaInfo queryMetaInfo) {
