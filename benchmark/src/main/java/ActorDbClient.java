@@ -15,6 +15,7 @@ import com.yahoo.ycsb.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -80,7 +81,7 @@ public class ActorDbClient extends DB {
     public Status update(String table, String key, Map<String, ByteIterator> values) {
         InsertIntoCommand cmd = InsertIntoCommand.builder()
                 .tableName(table)
-                .values(ImmutableList.of(key, values.toString()))
+                .values(new ArrayList<>(ImmutableList.of(key, values.toString())))
                 .build();
         CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
         return checkQuerySuccess(response);
@@ -90,7 +91,7 @@ public class ActorDbClient extends DB {
     public Status insert(String table, String key, Map<String, ByteIterator> values) {
         InsertIntoCommand cmd = InsertIntoCommand.builder()
                 .tableName(table)
-                .values(ImmutableList.of(key, values.toString()))
+                .values(new ArrayList<>(ImmutableList.of(key, values.toString())))
                 .build();
         CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
         return checkQuerySuccess(response);
@@ -124,7 +125,7 @@ public class ActorDbClient extends DB {
     private void createDefaultTable(String tableName) throws DBException {
         CreateTableCommand cmd = CreateTableCommand.builder()
                 .tableName(tableName)
-                .schema(ImmutableList.of("string", "string"))
+                .schema(new ArrayList<>(ImmutableList.of("string", "string")))
                 .build();
         CompletableFuture<QueryResponseMsg> response = client.sendRequest(cmd);
         Status status = checkQuerySuccess(response);
