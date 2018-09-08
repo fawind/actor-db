@@ -1,10 +1,12 @@
 package api.commands;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class DeleteCommand implements Command {
 
     private String tableName;

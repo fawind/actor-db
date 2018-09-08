@@ -1,5 +1,6 @@
 package api.commands;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,6 +8,7 @@ import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class InsertIntoCommand implements Command {
 
     private String tableName;
