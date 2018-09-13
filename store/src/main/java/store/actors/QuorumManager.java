@@ -8,6 +8,7 @@ import api.messages.QueryMetaInfo;
 import api.messages.QueryMsg;
 import api.messages.QueryResponseMsg;
 import api.messages.QueryResultMsg;
+import api.messages.QuerySuccessMsg;
 import api.model.Row;
 import store.configuration.DatastoreConfig;
 import store.configuration.DatastoreModule;
@@ -43,13 +44,14 @@ public class QuorumManager extends AbstractDBActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(QueryMsg.class, this::handleQuorum)
                 .match(QueryResponseMsg.class, this::handleQueryResponseMsg)
+                .match(QueryMsg.class, this::handleQuorum)
                 .matchAny(x -> log.error("Unknown message: {}", x))
                 .build();
     }
 
     private void handleQuorum(QueryMsg msg) {
+        log.info("get");
         QueryMetaInfo meta = addNewLamportId(msg.getQueryMetaInfo());
         msg.updateMetaInfo(meta);
 
@@ -72,9 +74,10 @@ public class QuorumManager extends AbstractDBActor {
 
     private void handleQueryResponseMsg(QueryResponseMsg msg) {
         lamportId = lamportId.max(msg.getLamportId());
+        LamportId lampId = msg.getQueryMetaInfo().getLamportId();
 
         // For now, if we see an error we assume everything is an error
-        if (msg instanceof QueryErrorMsg) {
+        if (msg instanceof QueryErrorMsg || msg instanceof QuerySuccessMsg) {
             tellWithNewestResponseLamportId(msg);
             return;
         }
